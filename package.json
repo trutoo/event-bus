@@ -1,0 +1,64 @@
+{
+  "name": "@trutoo/event-bus",
+  "version": "1.0.0",
+  "description": "Event bus ensuring reliable communication between micro frontends",
+  "keywords": [
+    "event bus",
+    "communication",
+    "micro frontends",
+    "fragments"
+  ],
+  "author": {
+    "name": "Trutoo AB",
+    "url": "https://www.trutoo.com/"
+  },
+  "license": "GPL-3.0",
+  "repository": "https://github.com/trutoo/event-bus.git",
+  "bugs": "https://github.com/trutoo/event-bus/issues",
+  "contributors": [
+    {
+      "name": "Erik Hughes",
+      "email": "erik.hughes@outlook.com",
+      "url": "https://github.com/swiftwork"
+    }
+  ],
+  "main": "dist/main.js",
+  "files": [
+    "dist/"
+  ],
+  "husky": {
+    "hooks": {
+      "pre-push": "npm run test",
+      "commit-msg": "node tools/commit-msg.js"
+    }
+  },
+  "scripts": {
+    "prebuild": "rimraf dist/*",
+    "build": "tsc",
+    "test": "jest",
+    "release": "semantic-release"
+  },
+  "dependencies": {
+    "deep-equal": "2.0.1",
+    "jsonschema": "1.2.4"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^5.0.0",
+    "@semantic-release/github": "7.0.4",
+    "@typescript-eslint/eslint-plugin": "2.21.0",
+    "@typescript-eslint/parser": "2.21.0",
+    "conventional-changelog-angular": "^5.0.6",
+    "eslint": "6.8.0",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-prettier": "3.1.2",
+    "husky": "4.2.3",
+    "jest": "^25.1.0",
+    "prettier": "^1.19.1",
+    "rimraf": "3.0.2",
+    "semantic-release": "17.0.4",
+    "typescript": "^3.7.5"
+  },
+  "optionalDependencies": {
+    "@types/jest": "25.1.2"
+  }
+}

@@ -1,0 +1,44 @@
+name: Continuous Delivery
+
+on:
+  push:
+    branches:
+      - master
+      - release/*
+
+jobs:
+  delivery:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source code
+        uses: actions/checkout@v2-beta
+        with:
+          fetch-depth: 0
+
+      - name: Set global git user and email
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+
+      - name: Set up Node.js version 13.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 13.x
+          registry-url: https://npm.pkg.github.com
+          scope: trutoo
+
+      - name: Install dependencies using CI
+        run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used in .npmrc to install packages from github
+
+      - name: Run tests on package
+        run: npm test
+
+      - name: Build and publish package to GitHub Packages and GitHub Release
+        run: npm run release
+        env:
+          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used to verify access through semantic release
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used by standard npm publish
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used for github releases through semantic release
