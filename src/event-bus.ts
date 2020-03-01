@@ -1,5 +1,7 @@
 import { validate } from 'jsonschema';
 import deepEqual from 'deep-equal';
+import globalThisShim from 'globalthis/shim';
+globalThisShim();
 
 type Callback<T> = (detail: T | undefined) => void;
 
@@ -13,8 +15,19 @@ export class EventBus {
     return this._lastId++;
   }
 
-  register(eventType: string, schema: any) {
-    if (!this._subscriptions[eventType]) this._subscriptions[eventType] = {};
+  /**
+   * Register a schema for the specified event type and equallity checking on subsequent registers.
+   * Subsequent registers must use an equal schema or an error will be thrown.
+   * @param eventType - name of event channel to register schema to
+   * @param schema - all communication on channel must follow this schema
+   * @returns returns true if event channel already existed of false if a new one was created
+   */
+  register(eventType: string, schema: object) {
+    let exists = true;
+    if (!this._subscriptions[eventType]) {
+      exists = false;
+      this._subscriptions[eventType] = {};
+    }
     const existingSchema = this._subscriptions[eventType].__schema;
     if (existingSchema && !deepEqual(existingSchema, schema)) {
       throw new Error(
@@ -22,10 +35,39 @@ export class EventBus {
       );
     }
     this._subscriptions[eventType].__schema = schema;
-    return true;
+    return exists;
   }
 
+  /**
+   * Unregister the schema for the specified event type if channel exists
+   * @param eventType - name of event channel to unregister schema from
+   * @returns returns true if event channel existed and existing schema was removed
+   */
+  unregister(eventType: string) {
+    const channel = this._subscriptions[eventType];
+    let exists = false;
+    if (channel && channel.__schema) {
+      exists = true;
+      delete channel.__schema;
+    }
+    return exists;
+  }
+
+  /**
+   * Subscribe to an event channel triggering callback on received event matching type.
+   * @param eventType - name of event channel to receive data from
+   * @param callback - function executed on when event channel receives new data
+   * @returns object containing an unsubscribe method
+   */
   subscribe<T>(eventType: string, callback: Callback<T>): { unsubscribe(): void };
+  /**
+   * Subscribe to an event channel triggering callback on received event matching type,
+   * with an optional replay of last event at initial subscription.
+   * @param eventType - name of event channel to receive data from
+   * @param replay - flag indicating if initial description should return last event
+   * @param callback - function executed on when event channel receives new data
+   * @returns object containing an unsubscribe method
+   */
   subscribe<T>(eventType: string, replay: boolean, callback: Callback<T>): { unsubscribe(): void };
   subscribe<T>(eventType: string, param2: boolean | Callback<T>, param3?: Callback<T>) {
     const id = this._getNextId();
@@ -41,6 +83,11 @@ export class EventBus {
     };
   }
 
+  /**
+   * Publish optionally data to and event channel triggering all subscription callbacks.
+   * @param eventType - name of event channel to send data to
+   * @param detail - object containing data to be sent
+   */
   publish<T>(eventType: string, detail?: T) {
     if (!this._subscriptions[eventType]) this._subscriptions[eventType] = {};
     const schema = this._subscriptions[eventType].__schema;
@@ -59,11 +106,3 @@ export class EventBus {
       .forEach(id => this._subscriptions[eventType][id](detail));
   }
 }
-
-declare global {
-  interface Window {
-    eventBus: EventBus;
-  }
-}
-
-window.eventBus = new EventBus();

@@ -1,41 +1,48 @@
 import { EventBus } from './event-bus';
 
 //------------------------------------------------------------------------------------
-// _getNextId
-//------------------------------------------------------------------------------------
-
-describe('[EventBus]: _getNextId', () => {
-  it('should get an incrementally increasing id', () => {
-    const eventBus = new EventBus();
-    expect(eventBus._getNextId()).toBe(1);
-    expect(eventBus._getNextId()).toBe(2);
-  });
-});
-
-//------------------------------------------------------------------------------------
 // register
 //------------------------------------------------------------------------------------
 
 describe('[EventBus]: register', () => {
-  it('should register a schema on new channels', () => {
+  it('should register schemas on new channels', () => {
     const eventBus = new EventBus();
-    eventBus.register('test1', { test: 'boolean' });
-    eventBus.register('test2', { test: 'boolean' });
+    let exists = eventBus.register('test1', { type: 'boolean' });
+    expect(exists).toBeFalsy();
+    exists = eventBus.register('test2', { type: 'string' });
+    expect(exists).toBeFalsy();
   });
 
-  it('should re-register an equal schema on an existing channel', () => {
+  it('should reregister an equal schema on an existing channel', () => {
     const eventBus = new EventBus();
-    eventBus.register('test1', { test1: 'boolean', test2: 'string' });
-    eventBus.register('test1', { test2: 'string', test1: 'boolean' });
+    let exists = eventBus.register('test1', { type: 'object', properties: { test: { type: 'boolean' } } });
+    expect(exists).toBeFalsy();
+    exists = eventBus.register('test1', { properties: { test: { type: 'boolean' } }, type: 'object' });
+    expect(exists).toBeTruthy();
   });
 
   it('should be fail to register a differentiating schema on an existing channel', () => {
     const eventBus = new EventBus();
     const register = () => {
-      eventBus.register('test1', { test1: 'boolean', test2: 'string' });
-      eventBus.register('test1', { test1: 'boolean', test2: 'boolean' });
+      eventBus.register('test1', { type: 'boolean' });
+      eventBus.register('test1', { type: 'string' });
     };
     expect(register).toThrowError();
+  });
+});
+
+//------------------------------------------------------------------------------------
+// unregister
+//------------------------------------------------------------------------------------
+
+describe('[EventBus]: unregister', () => {
+  it('should unregister the schema from channel', () => {
+    const eventBus = new EventBus();
+    let exists = eventBus.unregister('test1');
+    expect(exists).toBeFalsy();
+    eventBus.register('test1', { type: 'boolean' });
+    exists = eventBus.unregister('test1');
+    expect(exists).toBeTruthy();
   });
 });
 
@@ -77,20 +84,20 @@ describe('[EventBus]: subscribe', () => {
 describe('[EventBus]: publish', () => {
   it('should publish event to a new channel', () => {
     const eventBus = new EventBus();
-    eventBus.publish('test1', { test1: true });
+    eventBus.publish('test1', true);
   });
 
   it('should publish event to a registered channel matching schema', () => {
     const eventBus = new EventBus();
-    eventBus.register('test1', { test1: 'boolean' });
-    eventBus.publish('test1', { test1: true });
+    eventBus.register('test1', { type: 'boolean' });
+    eventBus.publish('test1', true);
   });
 
   it('should fail to publish incorrect event to a registered channel with schema', () => {
     const eventBus = new EventBus();
     const publish = () => {
-      eventBus.register('test1', { test1: 'boolean' });
-      eventBus.publish('test1', { test1: 'hello' });
+      eventBus.register('test1', { type: 'boolean' });
+      eventBus.publish('test1', 'hello');
     };
     expect(publish).toThrowError();
   });
@@ -109,6 +116,20 @@ describe('[EventBus]: subscribe and publish', () => {
       done();
     });
     eventBus.publish('test1', sent);
+  });
+
+  it('should handle multiple subscriptions with correct channels', () => {
+    const eventBus = new EventBus();
+    const callback1 = jest.fn();
+    const callback2 = jest.fn();
+    const callback3 = jest.fn();
+    eventBus.subscribe('test1', callback1);
+    eventBus.subscribe('test1', callback2);
+    eventBus.subscribe('test2', callback3);
+    eventBus.publish('test1', { test1: true });
+    expect(callback1).toHaveBeenCalled();
+    expect(callback2).toHaveBeenCalled();
+    expect(callback3).not.toHaveBeenCalled();
   });
 
   it('should no longer receive data after unsubscription', () => {
