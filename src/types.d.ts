@@ -1,3 +1,7 @@
+/// <reference types="node" />
+/// <reference types="jest" />
+/// <reference types="globalthis" />
+
 declare module 'deep-equal' {
   interface DeepEqualOptions {
     strict: boolean;

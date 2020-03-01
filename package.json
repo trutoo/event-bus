@@ -22,7 +22,9 @@
       "url": "https://github.com/swiftwork"
     }
   ],
-  "main": "dist/main.js",
+  "main": "dist/index.js",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
   "files": [
     "dist/"
   ],
@@ -34,12 +36,14 @@
   },
   "scripts": {
     "prebuild": "rimraf dist/*",
-    "build": "tsc",
+    "build": "rollup -c",
     "test": "jest",
+    "postversion": "npm run build -- --mode=production",
     "release": "semantic-release"
   },
   "dependencies": {
     "deep-equal": "2.0.1",
+    "globalthis": "1.0.1",
     "jsonschema": "1.2.4"
   },
   "devDependencies": {
@@ -55,10 +59,14 @@
     "jest": "^25.1.0",
     "prettier": "^1.19.1",
     "rimraf": "3.0.2",
+    "rollup": "1.32.0",
+    "rollup-plugin-typescript2": "0.26.0",
     "semantic-release": "17.0.4",
+    "ts-jest": "25.2.1",
     "typescript": "^3.7.5"
   },
   "optionalDependencies": {
+    "@types/globalthis": "1.0.0",
     "@types/jest": "25.1.2"
   }
 }
