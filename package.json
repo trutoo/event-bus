@@ -1,7 +1,7 @@
 {
   "name": "@trutoo/event-bus",
   "version": "1.0.0",
-  "description": "Event bus ensuring reliable communication between micro frontends",
+  "description": "Typesafe cross-platform pubsub event bus ensuring reliable communication between fragments and micro frontends.",
   "keywords": [
     "event bus",
     "communication",
