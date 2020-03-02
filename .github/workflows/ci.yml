@@ -39,5 +39,10 @@ jobs:
       - name: Run tests on package
         run: npm test
 
+      - name: Update coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build package
         run: npm run build
