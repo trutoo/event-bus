@@ -10,4 +10,4 @@ How does this change address the problem or feature?
 - [ ] Use github checklists. When solved, check the box and explain the answer.
 
 **Research**
-Describe research done (if any) using links, patterns, libraries or dependencies added used to address the pronlem or feature.
+Describe research done (if any) using links, patterns, libraries or dependencies added used to address the problem or feature.

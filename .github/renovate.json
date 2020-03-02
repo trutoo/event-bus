@@ -3,9 +3,10 @@
   "packageRules": [
     {
       "updateTypes": ["minor", "patch", "pin", "digest"],
+      "groupName": "minor",
       "automerge": true,
       "automergeType": "branch",
-      "prHourlyLimit": 6,
+      "prHourlyLimit": 12,
       "prConcurrentLimit": 10
     }
   ]
