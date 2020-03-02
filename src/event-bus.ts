@@ -39,9 +39,9 @@ export class EventBus {
   }
 
   /**
-   * Unregister the schema for the specified event type if channel exists
+   * Unregister the schema for the specified event type if channel exists.
    * @param eventType - name of event channel to unregister schema from
-   * @returns returns true if event channel existed and existing schema was removed
+   * @returns returns true if event channel existed and an existing schema was removed
    */
   unregister(eventType: string) {
     const channel = this._subscriptions[eventType];
@@ -84,9 +84,9 @@ export class EventBus {
   }
 
   /**
-   * Publish optionally data to and event channel triggering all subscription callbacks.
-   * @param eventType - name of event channel to send data to
-   * @param detail - object containing data to be sent
+   * Publish to event channel with an optional payload triggering all subscription callbacks.
+   * @param eventType - name of event channel to send payload on
+   * @param detail - payload to be sent
    */
   publish<T>(eventType: string, detail?: T) {
     if (!this._subscriptions[eventType]) this._subscriptions[eventType] = {};
