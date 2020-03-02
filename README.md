@@ -1,6 +1,7 @@
 # Event Bus
 
 ![Continuous Delivery](https://github.com/trutoo/event-bus/workflows/Continuous%20Delivery/badge.svg)
+[![Coverage Status](https://coveralls.io/repos/github/trutoo/event-bus/badge.svg?branch=master)](https://coveralls.io/github/trutoo/event-bus?branch=master) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/trutoo/event-bus)
 
 Simple typesafe cross-platform pubsub communication between different fragments or services. Purposefully built for a micro architecture service using for example versioned microfrontends.
 
