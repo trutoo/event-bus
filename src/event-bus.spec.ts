@@ -56,11 +56,19 @@ describe('[EventBus]: subscribe', () => {
     eventBus.subscribe('test1', jest.fn());
   });
 
-  it('should subscribe to an existing channel with replay of last event', () => {
+  it('should throw an error if subscribe is called without a callback', () => {
     const eventBus = new EventBus();
-    eventBus.subscribe('test1', true, replay => {
-      expect(replay).toBeFalsy();
-    });
+    const subscribe = () => {
+      eventBus.subscribe('test1', undefined as any);
+    };
+    expect(subscribe).toThrowError();
+  });
+
+  it('should not trigger a callback with replay if no previous event was published', () => {
+    const eventBus = new EventBus();
+    const callback = jest.fn();
+    eventBus.subscribe('test1', true, callback);
+    expect(callback).not.toHaveBeenCalled();
   });
 
   it('should not trigger a callback if no replay is requested', () => {
@@ -108,14 +116,23 @@ describe('[EventBus]: publish', () => {
 //------------------------------------------------------------------------------------
 
 describe('[EventBus]: subscribe and publish', () => {
-  it('should receive same data as published', done => {
+  it('should receive same data as published', () => {
     const eventBus = new EventBus();
     const sent = { test1: true };
-    eventBus.subscribe('test1', received => {
-      expect(received).toEqual(sent);
-      done();
-    });
+    const callback = jest.fn();
+    eventBus.subscribe('test1', callback);
+    expect(callback).not.toHaveBeenCalled();
     eventBus.publish('test1', sent);
+    expect(callback).toBeCalledWith(sent);
+  });
+
+  it('should subscribe to an existing channel with replay of last event', () => {
+    const eventBus = new EventBus();
+    const sent = { test1: true };
+    const callback = jest.fn();
+    eventBus.publish('test1', sent);
+    eventBus.subscribe('test1', true, callback);
+    expect(callback).toBeCalledWith(sent);
   });
 
   it('should handle multiple subscriptions with correct channels', () => {
@@ -132,7 +149,7 @@ describe('[EventBus]: subscribe and publish', () => {
     expect(callback3).not.toHaveBeenCalled();
   });
 
-  it('should no longer receive data after unsubscription', () => {
+  it('should no longer receive data after unsubscribe', () => {
     const eventBus = new EventBus();
     const callback = jest.fn();
     const subscription = eventBus.subscribe('test1', callback);

@@ -72,7 +72,10 @@ export class EventBus {
   subscribe<T>(eventType: string, param2: boolean | Callback<T>, param3?: Callback<T>) {
     const id = this._getNextId();
     const replay = typeof param2 === 'boolean' ? param2 : false;
-    const callback = typeof param2 === 'function' ? param2 : param3 || (Function.prototype as Callback<T>);
+    const callback = typeof param2 === 'function' ? param2 : param3;
+
+    if (typeof callback !== 'function')
+      throw new Error('Callback function must be supplied as either the second or third argument.');
 
     if (!this._subscriptions[eventType]) this._subscriptions[eventType] = {};
     else if (replay) callback(this._subscriptions[eventType].__replay);
