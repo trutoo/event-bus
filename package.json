@@ -44,13 +44,13 @@
   "dependencies": {
     "deep-equal": "2.0.1",
     "globalthis": "1.0.1",
-    "jsonschema": "1.2.4"
+    "jsonschema": "1.2.5"
   },
   "devDependencies": {
     "@semantic-release/changelog": "5.0.0",
     "@semantic-release/github": "7.0.4",
-    "@typescript-eslint/eslint-plugin": "2.21.0",
-    "@typescript-eslint/parser": "2.21.0",
+    "@typescript-eslint/eslint-plugin": "2.22.0",
+    "@typescript-eslint/parser": "2.22.0",
     "conventional-changelog-angular": "5.0.6",
     "eslint": "6.8.0",
     "eslint-config-prettier": "6.10.0",
@@ -63,10 +63,10 @@
     "rollup-plugin-typescript2": "0.26.0",
     "semantic-release": "17.0.4",
     "ts-jest": "25.2.1",
-    "typescript": "3.7.5"
+    "typescript": "3.8.3"
   },
   "optionalDependencies": {
     "@types/globalthis": "1.0.0",
-    "@types/jest": "25.1.2"
+    "@types/jest": "25.1.3"
   }
 }
