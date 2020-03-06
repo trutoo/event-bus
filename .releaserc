@@ -5,7 +5,8 @@
     [
       "@semantic-release/commit-analyzer",
       {
-        "config": "./tools/changelog.js"
+        "config": "./tools/changelog.js",
+        "releaseRules": [{ "type": "chore", "scope": "deps", "release": "patch" }]
       }
     ],
     [
