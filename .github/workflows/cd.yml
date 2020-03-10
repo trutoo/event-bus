@@ -30,7 +30,7 @@ jobs:
 
       - name: Append npm registry authentication to .npmrc
         run: |
-          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ${NPM_CONFIG_USERCONFIG}
+          echo '//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}' >> ${NPM_CONFIG_USERCONFIG}
 
       - name: Install dependencies using CI
         run: npm ci
@@ -55,3 +55,5 @@ jobs:
       - name: Publish package to NPM
         run: npm publish --access public --@trutoo:registry=https://registry.npmjs.org
         if: env.VERSION != null # Only if semantic-release publishes the package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # Used by standard npm publish
