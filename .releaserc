@@ -27,6 +27,12 @@
       {
         "assets": [{ "path": "dist/*.tgz", "label": "Distribution package" }]
       }
+    ],
+    [
+      "@semantic-release/exec",
+      {
+        "successCmd": "echo \"::set-env name=VERSION::${nextRelease.version}\""
+      }
     ]
   ]
 }

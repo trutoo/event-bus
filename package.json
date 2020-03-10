@@ -51,6 +51,7 @@
     "@rollup/plugin-commonjs": "11.0.2",
     "@rollup/plugin-node-resolve": "7.1.1",
     "@semantic-release/changelog": "5.0.0",
+    "@semantic-release/exec": "5.0.0",
     "@semantic-release/github": "7.0.4",
     "@typescript-eslint/eslint-plugin": "2.23.0",
     "@typescript-eslint/parser": "2.23.0",

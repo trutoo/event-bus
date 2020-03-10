@@ -47,3 +47,15 @@ jobs:
           NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used to verify access through semantic release
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used by standard npm publish
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used for github releases through semantic release
+
+      - name: Swap registry to NPM
+        uses: actions/setup-node@v1
+        if: env.VERSION != null
+        with:
+          registry-url: https://registry.npmjs.org
+
+      - name: Publish package to NPM
+        run: npm publish
+        if: env.VERSION != null
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
