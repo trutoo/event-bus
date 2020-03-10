@@ -53,5 +53,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used for github releases through semantic release
 
       - name: Publish package to NPM
-        run: npm publish --registry https://registry.npmjs.org
+        run: npm publish --access public --@trutoo:registry=https://registry.npmjs.org
         if: env.VERSION != null # Only if semantic-release publishes the package
