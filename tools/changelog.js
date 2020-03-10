@@ -60,6 +60,9 @@ function getWriterOpts() {
         commit.type = 'Bug Fixes';
       } else if (commit.type === 'perf') {
         commit.type = 'Performance Improvements';
+      } else if (commit.type === 'chore' && commit.scope === 'deps') {
+        commit.type = 'Dependency Updates';
+        commit.scope = '';
       } else if (discard) {
         // Move up earlier to filter below
         return;
