@@ -33,16 +33,33 @@ Then either import the side effects only exposing a `eventBus` global instance.
 
 ```javascript
 import '@trutoo/event-bus';
+// or
+require('@trutoo/event-bus');
+
+eventBus.register(/*...*/);
 ```
 
 or import the `EventBus` class to create your own instance.
 
 ```javascript
-// Global instance eventBus still created
 import { EventBus } from '@trutoo/event-bus';
+// or
+const { EventBus } = require('@trutoo/event-bus');
 
-// No global instance created
-import { EventBus } from '@trutoo/event-bus/dist/event-bus';
+const myEventBus = new EventBus();
+myEventBus.register(/*...*/);
+```
+
+or using the UMD module and instance.
+
+```html
+<script src="https://unpkg.com/@trutoo/event-bus@latest/dist/index.umd.min.js"></script>
+<script>
+  eventBus.register(/*...*/);
+  // or
+  const myEventBus = new EventBus.EventBus();
+  myEventBus.register(/*...*/);
+</script>
 ```
 
 ## Usage
