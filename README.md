@@ -17,9 +17,9 @@ This project was created to improve upon some of the deficits CustomEvents has i
 
 ## Installation
 
-Either add trutoo github package registry to your `.npmrc`
+Either add the Trutoo GitHub Package registry to your `.npmrc`
 
-```bash
+```ini
 @trutoo:registry=https://npm.pkg.github.com/trutoo
 ```
 
@@ -27,6 +27,12 @@ or install using the registry flag
 
 ```bash
 npm install @trutoo/event-bus --registry=https://npm.pkg.github.com/trutoo
+```
+
+or install from npm
+
+```bash
+npm install @trutoo/event-bus
 ```
 
 Then either import the side effects only exposing a `eventBus` global instance.

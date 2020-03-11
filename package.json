@@ -39,7 +39,7 @@
     "prebuild": "rimraf dist/*",
     "build": "rollup -c",
     "test": "jest",
-    "postversion": "npm run build -- --mode=production",
+    "postversion": "npm run build",
     "release": "semantic-release"
   },
   "dependencies": {
