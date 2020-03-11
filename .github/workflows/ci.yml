@@ -14,6 +14,7 @@ on:
 
 jobs:
   integration:
+    name: Node ${{ matrix.node_version }}
     runs-on: ubuntu-latest
 
     strategy:

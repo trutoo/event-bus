@@ -8,6 +8,7 @@ on:
 
 jobs:
   delivery:
+    name: Node 13.x
     runs-on: ubuntu-latest
 
     steps:
@@ -30,7 +31,7 @@ jobs:
 
       - name: Append npm registry authentication to .npmrc
         run: |
-          echo '//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}' >> ${NPM_CONFIG_USERCONFIG}
+          echo -e '\n//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}\n' >> ${NPM_CONFIG_USERCONFIG}
 
       - name: Install dependencies using CI
         run: npm ci
