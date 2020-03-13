@@ -29,7 +29,7 @@ or install using the registry flag
 npm install @trutoo/event-bus --registry=https://npm.pkg.github.com/trutoo
 ```
 
-or install from npm
+or install from the [npm registry @trutoo/event-bus](https://www.npmjs.com/package/@trutoo/event-bus)
 
 ```bash
 npm install @trutoo/event-bus
