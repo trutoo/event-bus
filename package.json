@@ -45,7 +45,7 @@
   "dependencies": {
     "deep-equal": "2.0.1",
     "globalthis": "1.0.1",
-    "jsonschema": "1.2.5"
+    "jsonschema": "1.2.6"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "11.0.2",
