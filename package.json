@@ -43,7 +43,7 @@
     "release": "semantic-release"
   },
   "dependencies": {
-    "deep-equal": "2.0.2",
+    "deep-equal": "2.0.3",
     "globalthis": "1.0.1",
     "jsonschema": "1.2.6"
   },
