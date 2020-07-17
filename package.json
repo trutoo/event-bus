@@ -74,6 +74,6 @@
   },
   "optionalDependencies": {
     "@types/globalthis": "1.0.1",
-    "@types/jest": "25.2.3"
+    "@types/jest": "26.0.4"
   }
 }
