@@ -14,21 +14,21 @@ on:
 
 jobs:
   integration:
-    name: Node ${{ matrix.node_version }}
+    name: Node ${{ matrix.node }}
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x, 13.x]
+        node: [12.x, 13.x, 14.x]
 
     steps:
       - name: Check out source code
         uses: actions/checkout@v2-beta
 
-      - name: Set up Node.js version ${{ matrix.node-version }}
+      - name: Set up Node.js version ${{ matrix.node }}
         uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node }}
           registry-url: https://npm.pkg.github.com
           scope: trutoo
 

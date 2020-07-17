@@ -8,7 +8,7 @@ on:
 
 jobs:
   delivery:
-    name: Node 13.x
+    name: Node 14.x
     runs-on: ubuntu-latest
 
     steps:
@@ -22,10 +22,10 @@ jobs:
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
 
-      - name: Set up Node.js version 13.x
+      - name: Set up Node.js version 14.x
         uses: actions/setup-node@v1
         with:
-          node-version: 13.x
+          node-version: 14.x
           registry-url: https://npm.pkg.github.com
           scope: trutoo
 
