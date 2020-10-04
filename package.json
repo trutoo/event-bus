@@ -43,9 +43,9 @@
     "release": "semantic-release"
   },
   "dependencies": {
-    "deep-equal": "2.0.3",
+    "deep-equal": "2.0.4",
     "globalthis": "1.0.1",
-    "jsonschema": "1.2.7"
+    "jsonschema": "1.2.8"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "15.1.0",
