@@ -48,7 +48,7 @@
     "jsonschema": "1.4.0"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "15.1.0",
+    "@rollup/plugin-commonjs": "16.0.0",
     "@rollup/plugin-node-resolve": "9.0.0",
     "@semantic-release/changelog": "5.0.1",
     "@semantic-release/exec": "5.0.0",
