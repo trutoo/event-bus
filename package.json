@@ -55,8 +55,8 @@
     "@semantic-release/github": "7.1.1",
     "@typescript-eslint/eslint-plugin": "4.6.1",
     "@typescript-eslint/parser": "4.6.1",
-    "conventional-changelog-angular": "5.0.11",
-    "eslint": "7.12.1",
+    "conventional-changelog-angular": "5.0.12",
+    "eslint": "7.13.0",
     "eslint-config-prettier": "6.15.0",
     "eslint-plugin-prettier": "3.1.4",
     "husky": "4.3.0",
@@ -69,7 +69,7 @@
     "rollup-plugin-terser": "7.0.2",
     "rollup-plugin-typescript2": "0.29.0",
     "semantic-release": "17.2.2",
-    "ts-jest": "26.4.3",
+    "ts-jest": "26.4.4",
     "typescript": "4.0.5"
   },
   "optionalDependencies": {
