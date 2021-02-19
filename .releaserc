@@ -31,7 +31,7 @@
     [
       "@semantic-release/exec",
       {
-        "successCmd": "echo \"::set-env name=VERSION::${nextRelease.version}\""
+        "successCmd": "echo \"VERSION=${nextRelease.version}\" >> $GITHUB_ENV"
       }
     ]
   ]
