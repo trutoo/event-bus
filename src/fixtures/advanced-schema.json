@@ -1,0 +1,37 @@
+{
+  "type": "object",
+  "required": [
+    "name",
+    "amount",
+    "price"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "organic": {
+      "type": "boolean"
+    },
+    "stores": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

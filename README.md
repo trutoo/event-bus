@@ -1,19 +1,35 @@
 # Event Bus
 
 ![Continuous Delivery](https://github.com/trutoo/event-bus/workflows/Continuous%20Delivery/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/trutoo/event-bus/badge.svg?branch=master)](https://coveralls.io/github/trutoo/event-bus?branch=master) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/trutoo/event-bus)
+[![Coverage Status](https://coveralls.io/repos/github/trutoo/event-bus/badge.svg?branch=master)](https://coveralls.io/github/trutoo/event-bus?branch=master) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/trutoo/event-bus) [![[npm downloads]](https://img.shields.io/npm/dt/@trutoo/event-bus)](https://www.npmjs.com/package/@trutoo/event-bus) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/@trutoo/event-bus) ![License](https://img.shields.io/github/license/trutoo/event-bus)
 
-Simple typesafe cross-platform pubsub communication between different fragments or services. Purposefully built for a micro architecture service using for example versioned microfrontends.
+Simple typesafe cross-platform pubsub communication between different single page applications, web components, fragments, or services. Purposefully built for a micro frontend architecture with a distributed responsibility for deployment. Allowing for framework agnostic and safe communication between different implementations and version. Catch those pesky event errors early :heart:.
+
+---
+
+## Table of Contents
+
+* [Purpose](#purpose)
+* [Installation](#installation)
+* [Usage](#usage)
+  + [Advanced Schema](#advanced-schema)
+* [API](#api)
+  + [Register](#register)
+  + [Unregister](#unregister)
+  + [Subscribe](#subscribe)
+  + [Publish](#publish)
+
+---
 
 ## Purpose
 
-This project was created to improve upon some of the deficits CustomEvents has in relation to event communication between separate fragments, which often is the preferred way of communication. Below points are some of the benefits of using this pubsub package.
+This project was created to improve upon some of the deficits CustomEvents has in relation to event communication between separate web components or fragments, which often is the preferred way of communication. Below points are some of the benefits of using this pub-sub solution over the native solution.
 
-1. Each fragment can register on an event channel name to ensure all traffic on that channel follow a specified schema. This means incompatibilities are reported before any payload is sent and every payload will be typesafe.
+1. Each fragment can register on a custom named event channel with an optional [JSON schema draft-04](https://tools.ietf.org/html/draft-zyp-json-schema-04) to ensure all future traffic on that channel follows the specification. This means incompatibilities are reported before any payload is sent and every payload will be typesafe.
 
 2. The individual event channels stores the last payload allowing new fragments or asynchronous subscriptions to ask for a replay of the last payloads data as a first callback.
 
-3. CustomEvents require a polyfill to work in older browsers.
+3. CustomEvents require a polyfill to work in older browsers, while this project works out of the box with Internet Explorer 11.
 
 ## Installation
 
@@ -70,10 +86,20 @@ or using the UMD module and instance.
 
 ## Usage
 
-`Fragment One`
+Simple event bus registration with communication between a standard web component and a React component, as the event bus is framework agnostic. In addition a basic [JSON schema draft-04](https://tools.ietf.org/html/draft-zyp-json-schema-04) is used to restrict communication to a single boolean.
+
+`JSON Schema`
+
+```json
+{
+  "type": "boolean"
+}
+```
+
+`Fragment One - Web Component`
 
 ```typescript
-class PubElement extends HTMLElement {
+class PublisherElement extends HTMLElement {
   connectedCallback() {
     eventBus.register('namespace:eventName', { type: 'boolean' });
     this.render();
@@ -91,13 +117,12 @@ class PubElement extends HTMLElement {
 }
 ```
 
-`Fragment Two`
+`Fragment Two - React Component`
 
 ```typescript
 import React, { useState, useEffect } from 'react';
-type Props = {};
 
-function SubComponent({}: Props) {
+function SubscriberComponent() {
   const [isFavorite, setFavorite] = useState(false);
 
   useEffect(() => {
@@ -112,6 +137,97 @@ function SubComponent({}: Props) {
   });
 
   return isFavorite ? 'This is a favorite' : 'This is not interesting';
+}
+```
+
+### Advanced Schema
+
+Following is an example of a more a more complex use-case with a larger [JSON schema draft-04](https://tools.ietf.org/html/draft-zyp-json-schema-04) and registration on multiple channels.
+
+`JSON Schema`
+```json
+{
+  "type": "object",
+  "required": [
+    "name",
+    "amount",
+    "price"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "organic": {
+      "type": "boolean"
+    },
+    "stores": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+`Fragment - Angular Component`
+
+```typescript
+import { Component } from '@angular/core';
+import eventSchema from './event-schema.json';
+
+@Component({
+  selector: 'app-store',
+  template: '<button (onClick)="onSend()">Add to cart</button>',
+})
+export class StoreComponent implements OnInit, OnDestroy {
+  private subs: { unsubscribe(): void }[] = [];
+
+  ngOnInit() {
+    // Register on add to cart channel
+    eventBus.register('store:addToCart', eventSchema);
+
+    // No need to register if no schema is required
+    this.sub.push(eventBus.subscribe<boolean>('store:newDeals', this.onNewDeals));
+  }
+
+  onNewDeals() {
+    /* handle new deals ... */
+  }
+
+  onSend() {
+    eventBus.publish('store:addToCart', {
+      name: 'Milk',
+      amount: '1000 ml',
+      price: 0.99,
+      organic: true,
+      stores: [
+        {
+          name: 'ACME Food AB',
+          url: 'acme-food.com'
+        }
+      ]
+    });
+  }
+
+  ngOnDestroy() {
+    this.subs.forEach(sub => sub.unsubscribe());
+  }
 }
 ```
 

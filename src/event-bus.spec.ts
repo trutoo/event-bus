@@ -1,4 +1,5 @@
 import { EventBus } from './event-bus';
+import AdvancedSchema from './fixtures/advanced-schema.json';
 
 //------------------------------------------------------------------------------------
 // register
@@ -13,7 +14,7 @@ describe('[EventBus]: register', () => {
     expect(exists).toBeFalsy();
   });
 
-  it('should reregister an equal schema on an existing channel', () => {
+  it('should re-register an equal schema on an existing channel', () => {
     const eventBus = new EventBus();
     let exists = eventBus.register('test1', { type: 'object', properties: { test: { type: 'boolean' } } });
     expect(exists).toBeFalsy();
@@ -122,6 +123,27 @@ describe('[EventBus]: subscribe and publish', () => {
     const callback = jest.fn();
     eventBus.subscribe('test1', callback);
     expect(callback).not.toHaveBeenCalled();
+    eventBus.publish('test1', sent);
+    expect(callback).toBeCalledWith(sent);
+  });
+
+  it('should handle more advanced schemas', () => {
+    const eventBus = new EventBus();
+    const sent = {
+      name: 'Milk',
+      amount: '1000 ml',
+      price: 0.99,
+      organic: true,
+      stores: [
+        {
+          name: 'ACME Food AB',
+          url: 'acme-food.com'
+        }
+      ]
+    };
+    const callback = jest.fn();
+    eventBus.register('test1', AdvancedSchema);
+    eventBus.subscribe('test1', callback);
     eventBus.publish('test1', sent);
     expect(callback).toBeCalledWith(sent);
   });
