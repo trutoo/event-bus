@@ -86,7 +86,7 @@ or using the UMD module and instance.
 
 ## Usage
 
-Simple event bus registration with communication between a standard web component and a React component, as the event bus is framework agnostic. In addition a basic [JSON schema draft-04](https://tools.ietf.org/html/draft-zyp-json-schema-04) is used to restrict communication to a single boolean. Below outlines the basic usage, but can be can also be seen under [`/examples`](./tree/master/src).
+Simple event bus registration with communication between a standard web component and a React component, as the event bus is framework agnostic. In addition a basic [JSON schema draft-04](https://tools.ietf.org/html/draft-zyp-json-schema-04) is used to restrict communication to a single boolean. Below outlines the basic usage, but can be can also be seen under [`/docs`](https://github.com/trutoo/event-bus/tree/master/docs) folder.
 
 `JSON Schema`
 
