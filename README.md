@@ -86,7 +86,7 @@ or using the UMD module and instance.
 
 ## Usage
 
-Simple event bus registration with communication between a standard web component and a React component, as the event bus is framework agnostic. In addition a basic [JSON schema draft-04](https://tools.ietf.org/html/draft-zyp-json-schema-04) is used to restrict communication to a single boolean.
+Simple event bus registration with communication between a standard web component and a React component, as the event bus is framework agnostic. In addition a basic [JSON schema draft-04](https://tools.ietf.org/html/draft-zyp-json-schema-04) is used to restrict communication to a single boolean. Below outlines the basic usage, but can be can also be seen under [`/examples`](./tree/master/src).
 
 `JSON Schema`
 
@@ -134,7 +134,7 @@ function SubscriberComponent() {
     return function cleanup() {
       sub.unsubscribe();
     };
-  });
+  }, []);
 
   return isFavorite ? 'This is a favorite' : 'This is not interesting';
 }

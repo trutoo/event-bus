@@ -1,14 +1,44 @@
 import { validate } from 'jsonschema';
-import deepEqual from 'deep-equal';
-import globalThisShim from 'globalthis/shim';
-globalThisShim();
+import { deepCompareStrict } from 'jsonschema/lib/helpers';
 
 type Callback<T> = (detail: T | undefined) => void;
+
+export class DetailMismatchError extends Error {
+  /**
+   * Creates a new DetailMismatchError error
+   * @param eventType - name of event channel
+   * @param schema - registered schema on event channel
+   * @param detail - detail payload sent
+   */
+  constructor(public eventType: string, public schema: any, public detail: any) {
+    super(`detail does not match the specified schema for event type [${eventType}].`)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, DetailMismatchError)
+    }
+    this.name = "DetailMismatchError";
+  }
+}
+
+export class SchemaMismatchError extends Error {
+  /**
+   * Creates a new SchemaMismatchError error
+   * @param eventType - name of event channel
+   * @param schema - registered schema on event channel
+   * @param newSchema - new schema attempting to be registered on event channel
+   */
+  constructor(public eventType: string, public schema: any, public newSchema: any) {
+    super(`schema registration for [${eventType}] must match already registered schema.`)
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, SchemaMismatchError)
+    }
+    this.name = "SchemaMismatchError";
+  }
+}
 
 export class EventBus {
   private _lastId = 0;
   private _subscriptions: {
-    [eventType: string]: { __replay?: any; __schema?: any; [id: string]: (detail: any) => void };
+    [eventType: string]: { __replay?: any; __schema?: any;[id: string]: (detail: any) => void };
   } = {};
 
   private _getNextId() {
@@ -16,11 +46,14 @@ export class EventBus {
   }
 
   /**
-   * Register a schema for the specified event type and equallity checking on subsequent registers.
+   * Register a schema for the specified event type and equality checking on subsequent registers.
    * Subsequent registers must use an equal schema or an error will be thrown.
    * @param eventType - name of event channel to register schema to
    * @param schema - all communication on channel must follow this schema
    * @returns returns true if event channel already existed of false if a new one was created
+   * 
+   * @throws {@link SchemaMismatchError}
+   * This exception is thrown if new schema does not match already registered schema.
    */
   register(eventType: string, schema: object) {
     let exists = true;
@@ -28,11 +61,9 @@ export class EventBus {
       exists = false;
       this._subscriptions[eventType] = {};
     }
-    const existingSchema = this._subscriptions[eventType].__schema;
-    if (existingSchema && !deepEqual(existingSchema, schema)) {
-      throw new Error(
-        `Schema registration for [${eventType}] must match:\n\n${JSON.stringify(existingSchema, undefined, 2)}`,
-      );
+    const registered = this._subscriptions[eventType].__schema;
+    if (registered && !deepCompareStrict(registered, schema)) {
+      throw new SchemaMismatchError(eventType, registered, schema);
     }
     this._subscriptions[eventType].__schema = schema;
     return exists;
@@ -90,18 +121,15 @@ export class EventBus {
    * Publish to event channel with an optional payload triggering all subscription callbacks.
    * @param eventType - name of event channel to send payload on
    * @param detail - payload to be sent
+   * 
+   * @throws {@link DetailMismatchError}
+   * This exception is thrown if detail payload does is not valid against registered schema.
    */
   publish<T>(eventType: string, detail?: T) {
     if (!this._subscriptions[eventType]) this._subscriptions[eventType] = {};
     const schema = this._subscriptions[eventType].__schema;
     if (typeof detail !== 'undefined' && schema && !validate(detail, schema).valid) {
-      throw new Error(
-        `Detail does not match the specified schema for event type [${eventType}]. Expected detail to follow schema:\n\n${JSON.stringify(
-          schema,
-          undefined,
-          2,
-        )}`,
-      );
+      throw new DetailMismatchError(eventType, schema, detail);
     }
     this._subscriptions[eventType].__replay = detail;
     Object.keys(this._subscriptions[eventType])

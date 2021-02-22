@@ -1,7 +1,6 @@
-import resolve from '@rollup/plugin-node-resolve';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import nodePolyfills from 'rollup-plugin-node-polyfills';
 import commonjs from '@rollup/plugin-commonjs';
-import builtins from 'rollup-plugin-node-builtins';
-import globals from 'rollup-plugin-node-globals';
 import typescript from 'rollup-plugin-typescript2';
 import { terser } from 'rollup-plugin-terser';
 import pkg from './package.json';
@@ -15,6 +14,7 @@ export default [
         file: pkg.browser,
         format: 'umd',
         plugins: [terser()],
+        sourcemap: true,
       },
       {
         name: 'EventBus',
@@ -23,10 +23,9 @@ export default [
       },
     ],
     plugins: [
-      resolve({ browser: true, preferBuiltins: true }),
       commonjs(),
-      globals(),
-      builtins(),
+      nodePolyfills(),
+      nodeResolve({ browser: true, preferBuiltins: false }),
       typescript({
         typescript: require('typescript'),
       }),
@@ -34,8 +33,9 @@ export default [
   },
   {
     input: 'src/index.ts',
-    external: [...Object.keys(pkg.dependencies || {}), 'globalthis/shim', ...Object.keys(pkg.peerDependencies || {})],
+    external: ['url', ...Object.keys(pkg.dependencies || {}), ...Object.keys(pkg.peerDependencies || {})],
     plugins: [
+      commonjs(),
       typescript({
         typescript: require('typescript'),
       }),

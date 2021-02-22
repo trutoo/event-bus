@@ -1,5 +1,67 @@
-import { EventBus } from './event-bus';
+import { DetailMismatchError, EventBus, SchemaMismatchError } from './event-bus';
 import AdvancedSchema from './fixtures/advanced-schema.json';
+
+//------------------------------------------------------------------------------------
+// DetailMismatchError
+//------------------------------------------------------------------------------------
+
+describe('[DetailMismatchError]', () => {
+  const captureStackTrace = Error.captureStackTrace;
+
+  afterEach(() => {
+    Error.captureStackTrace = captureStackTrace;
+  });
+
+  it('should create detailed errors', () => {
+    const schema = { type: 'boolean' }
+    const detail = true;
+    Error.captureStackTrace = jest.fn();
+    const error = new DetailMismatchError('channel', schema, detail);
+    expect(Error.captureStackTrace).toHaveBeenCalledWith(error, DetailMismatchError);
+    expect(error).toBeInstanceOf(Error);
+    expect(error.eventType).toBe('channel');
+    expect(error.schema).toBe(schema);
+    expect(error.detail).toBe(detail);
+  });
+
+
+  it('should not call captureStackTrace if it is not defined', () => {
+    (Error as any).captureStackTrace = undefined;
+    new DetailMismatchError('channel', null, null);
+    expect(Error.captureStackTrace).toBeFalsy();
+  });
+});
+
+//------------------------------------------------------------------------------------
+// SchemaMismatchError
+//------------------------------------------------------------------------------------
+
+describe('[SchemaMismatchError]', () => {
+  const captureStackTrace = Error.captureStackTrace;
+
+  afterEach(() => {
+    Error.captureStackTrace = captureStackTrace;
+  });
+
+  it('should create detailed errors', () => {
+    const schema = { type: 'boolean' }
+    const newSchema = { type: 'string' };
+    Error.captureStackTrace = jest.fn();
+    const error = new SchemaMismatchError('channel', schema, newSchema);
+    expect(Error.captureStackTrace).toHaveBeenCalledWith(error, SchemaMismatchError);
+    expect(error).toBeInstanceOf(Error);
+    expect(error.eventType).toBe('channel');
+    expect(error.schema).toBe(schema);
+    expect(error.newSchema).toBe(newSchema);
+  });
+
+
+  it('should not call captureStackTrace if it is not defined', () => {
+    (Error as any).captureStackTrace = undefined;
+    new SchemaMismatchError('channel', null, null);
+    expect(Error.captureStackTrace).toBeFalsy();
+  });
+});
 
 //------------------------------------------------------------------------------------
 // register

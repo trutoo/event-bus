@@ -1,0 +1,53 @@
+<!doctype html>
+
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+
+  <title>Event Bus Example</title>
+
+  <style>
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+    }
+
+    body>* {
+      width: 100%;
+      max-width: 32rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>Open console <code>F12</code> to view logs</h1>
+
+  <web-component></web-component>
+
+  <div id="react-component"></div>
+
+  <!-- Vendor Scripts -->
+  <script crossorigin
+    src="https://unpkg.com/react@17/umd/react.development.js"></script>
+  <script crossorigin
+    src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+  <script src="../dist/index.umd.js"></script>
+
+  <!-- Example Scripts -->
+  <script src="./react-component.js"></script>
+  <script src="./web-component.js"></script>
+
+</body>
+
+</html>
