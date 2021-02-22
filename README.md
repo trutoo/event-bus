@@ -1,7 +1,7 @@
 # Event Bus
 
 ![Continuous Delivery](https://github.com/trutoo/event-bus/workflows/Continuous%20Delivery/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/trutoo/event-bus/badge.svg?branch=master)](https://coveralls.io/github/trutoo/event-bus?branch=master) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/trutoo/event-bus) [![[npm downloads]](https://img.shields.io/npm/dt/@trutoo/event-bus)](https://www.npmjs.com/package/@trutoo/event-bus) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/@trutoo/event-bus) ![License](https://img.shields.io/github/license/trutoo/event-bus)
+[![Coverage Status](https://coveralls.io/repos/github/trutoo/event-bus/badge.svg?branch=master)](https://coveralls.io/github/trutoo/event-bus?branch=master) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/trutoo/event-bus) [![[npm downloads]](https://img.shields.io/npm/dt/@trutoo/event-bus)](https://www.npmjs.com/package/@trutoo/event-bus) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/@trutoo/event-bus) ![License](https://img.shields.io/github/license/trutoo/event-bus?kill_cache=0)
 
 Simple typesafe cross-platform pubsub communication between different single page applications, web components, fragments, or services. Purposefully built for a micro frontend architecture with a distributed responsibility for deployment. Allowing for framework agnostic and safe communication between different implementations and version. Catch those pesky event errors early :heart:.
 
