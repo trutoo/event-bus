@@ -11,7 +11,7 @@ export class DetailMismatchError extends Error {
    * @param detail - detail payload sent
    */
   constructor(public eventType: string, public schema: any, public detail: any) {
-    super(`detail does not match the specified schema for event type [${eventType}].`)
+    super(`detail does not match the specified schema for event type [${eventType}].`);
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, DetailMismatchError)
     }
@@ -27,7 +27,7 @@ export class SchemaMismatchError extends Error {
    * @param newSchema - new schema attempting to be registered on event channel
    */
   constructor(public eventType: string, public schema: any, public newSchema: any) {
-    super(`schema registration for [${eventType}] must match already registered schema.`)
+    super(`schema registration for [${eventType}] must match already registered schema.`);
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, SchemaMismatchError)
     }
@@ -135,5 +135,32 @@ export class EventBus {
     Object.keys(this._subscriptions[eventType])
       .filter(key => !key.startsWith('__'))
       .forEach(id => this._subscriptions[eventType][id](detail));
+
+    // Publish all events on the wildcard channel
+    if (this._subscriptions['*']) {
+      Object.keys(this._subscriptions['*'])
+        .filter(key => !key.startsWith('__'))
+        .forEach(id => this._subscriptions['*'][id]({ eventType, detail }));
+    }
+  }
+
+  /**
+   * Get the latest published payload on the specified event channel.
+   * @param eventType - name of the event channel to fetch the latest payload from
+   * @returns the latest payload or `undefined`
+   */
+  getLatest<T>(eventType: string): T | undefined {
+    if (this._subscriptions[eventType])
+      return this._subscriptions[eventType].__replay;
+  }
+
+  /**
+   * Get the schema registered on the specified event channel.
+   * @param eventType - name of the event channel to fetch the schema from
+   * @returns the schema or `undefined`
+   */
+  getSchema(eventType: string): any | undefined {
+    if (this._subscriptions[eventType])
+      return this._subscriptions[eventType].__schema;
   }
 }

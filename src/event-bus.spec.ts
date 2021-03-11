@@ -20,8 +20,8 @@ describe('[DetailMismatchError]', () => {
     expect(Error.captureStackTrace).toHaveBeenCalledWith(error, DetailMismatchError);
     expect(error).toBeInstanceOf(Error);
     expect(error.eventType).toBe('channel');
-    expect(error.schema).toBe(schema);
-    expect(error.detail).toBe(detail);
+    expect(error.schema).toStrictEqual(schema);
+    expect(error.detail).toStrictEqual(detail);
   });
 
 
@@ -51,8 +51,8 @@ describe('[SchemaMismatchError]', () => {
     expect(Error.captureStackTrace).toHaveBeenCalledWith(error, SchemaMismatchError);
     expect(error).toBeInstanceOf(Error);
     expect(error.eventType).toBe('channel');
-    expect(error.schema).toBe(schema);
-    expect(error.newSchema).toBe(newSchema);
+    expect(error.schema).toStrictEqual(schema);
+    expect(error.newSchema).toStrictEqual(newSchema);
   });
 
 
@@ -174,6 +174,33 @@ describe('[EventBus]: publish', () => {
   });
 });
 
+
+//------------------------------------------------------------------------------------
+// getLatest
+//------------------------------------------------------------------------------------
+
+describe('[EventBus]: getLatest', () => {
+  it('should return the latest published event on channel', () => {
+    const eventBus = new EventBus();
+    eventBus.publish('test1', true);
+    expect(eventBus.getLatest('test1')).toBe(true)
+    expect(eventBus.getLatest('test2')).toBeUndefined()
+  });
+});
+
+//------------------------------------------------------------------------------------
+// getSchema
+//------------------------------------------------------------------------------------
+
+describe('[EventBus]: getSchema', () => {
+  it('should return the schema registered on channel', () => {
+    const eventBus = new EventBus();
+    eventBus.register('test1', { type: 'boolean' });
+    expect(eventBus.getSchema('test1')).toStrictEqual({ type: 'boolean' })
+    expect(eventBus.getSchema('test2')).toBeUndefined()
+  });
+});
+
 //------------------------------------------------------------------------------------
 // subscribe and publish
 //------------------------------------------------------------------------------------
@@ -187,6 +214,15 @@ describe('[EventBus]: subscribe and publish', () => {
     expect(callback).not.toHaveBeenCalled();
     eventBus.publish('test1', sent);
     expect(callback).toBeCalledWith(sent);
+  });
+
+  it('should receive events on wildcard channel * regardless of channel it was published on', () => {
+    const eventBus = new EventBus();
+    const sent = { test1: true };
+    const callback = jest.fn();
+    eventBus.subscribe('*', callback);
+    eventBus.publish('test1', sent);
+    expect(callback).toBeCalledWith({ eventType: 'test1', detail: sent });
   });
 
   it('should handle more advanced schemas', () => {

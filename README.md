@@ -18,6 +18,8 @@ Simple typesafe cross-platform pubsub communication between different single pag
   + [Unregister](#unregister)
   + [Subscribe](#subscribe)
   + [Publish](#publish)
+  + [Get Latest](#get-latest)
+  + [Get Schema](#get-schema)
 
 ---
 
@@ -268,7 +270,10 @@ unregister(eventType: string): boolean;
 
 ### Subscribe
 
-Subscribe to an event channel triggering callback on received event matching type, with an optional replay of last event at initial subscription.
+Subscribe to an event channel triggering callback on received event matching type,
+with an optional replay of last event at initial subscription.
+The event type channel may be the wildcard `'*'` resulting in the callback being fired with
+`{ eventType: string, detail: T }` for any event published.
 
 ```typescript
 subscribe<T>(eventType: string, callback: Callback<T>): { unsubscribe(): void };
@@ -302,3 +307,35 @@ publish<T>(eventType: string, detail?: T): void;
 | detail    | `any`    | payload to be sent                       |
 
 **Returns** - void
+
+### Get Latest
+
+Get the latest published payload on the specified event channel.
+
+```typescript
+getLatest<T>(eventType: string): T | undefined;
+```
+
+#### Parameters
+
+| Name      | Type     | Description                              |
+| --------- | -------- | ---------------------------------------- |
+| eventType | `string` | name of the event channel to fetch the latest payload from |
+
+**Returns** - the latest payload or `undefined`
+
+### Get Schema
+
+Get the schema registered on the specified event channel.
+
+```typescript
+getSchema<T>(eventType: string): any | undefined;
+```
+
+#### Parameters
+
+| Name      | Type     | Description                              |
+| --------- | -------- | ---------------------------------------- |
+| eventType | `string` | name of the event channel to fetch the schema from |
+
+**Returns** - the schema or `undefined`
