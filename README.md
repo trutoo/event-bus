@@ -240,14 +240,14 @@ export class StoreComponent implements OnInit, OnDestroy {
 Register a schema for the specified event type and equality checking on subsequent registers. Subsequent registers must use an equal schema or an error will be thrown.
 
 ```typescript
-register(eventType: string, schema: object): boolean;
+register(channel: string, schema: object): boolean;
 ```
 
 #### Parameters
 
 | Name      | Type     | Description                                          |
 | --------- | -------- | ---------------------------------------------------- |
-| eventType | `string` | name of event channel to register schema to          |
+| channel | `string` | name of event channel to register schema to          |
 | schema    | `object` | all communication on channel must follow this schema |
 
 **Returns** - returns true if event channel already existed of false if a new one was created.
@@ -257,14 +257,14 @@ register(eventType: string, schema: object): boolean;
 Unregister the schema for the specified event type if channel exists.
 
 ```typescript
-unregister(eventType: string): boolean;
+unregister(channel: string): boolean;
 ```
 
 #### Parameters
 
 | Name      | Type     | Description                                     |
 | --------- | -------- | ----------------------------------------------- |
-| eventType | `string` | name of event channel to unregister schema from |
+| channel | `string` | name of event channel to unregister schema from |
 
 **Returns** - returns true if event channel existed and an existing schema was removed.
 
@@ -272,20 +272,27 @@ unregister(eventType: string): boolean;
 
 Subscribe to an event channel triggering callback on received event matching type,
 with an optional replay of last event at initial subscription.
-The event type channel may be the wildcard `'*'` resulting in the callback being fired with
-`{ eventType: string, detail: T }` for any event published.
+The channel may be the wildcard `'*'` to subscribe to all channels.
 
 ```typescript
-subscribe<T>(eventType: string, callback: Callback<T>): { unsubscribe(): void };
+subscribe<T>(channel: string, callback: Callback<T>): { unsubscribe(): void };
 
-subscribe<T>(eventType: string, replay: boolean, callback: Callback<T>): { unsubscribe(): void };
+subscribe<T>(channel: string, replay: boolean, callback: Callback<T>): { unsubscribe(): void };
+```
+
+Callbacks will be fired when event is published on a subscribed channel with the argument:
+``` typescript
+{
+  channel: string,
+  payload: T,
+}
 ```
 
 #### Parameters
 
 | Name      | Type            | Description                                                     |
 | --------- | --------------- | --------------------------------------------------------------- |
-| eventType | `string`        | name of event channel to receive data from                      |
+| channel | `string`        | name of event channel to receive data from                      |
 | replay    | `boolean=false` | flag indicating if initial description should return last event |
 | callback  | `function`      | function executed on when event channel receives new data       |
 
@@ -296,15 +303,15 @@ subscribe<T>(eventType: string, replay: boolean, callback: Callback<T>): { unsub
 Publish to event channel with an optional payload triggering all subscription callbacks.
 
 ```typescript
-publish<T>(eventType: string, detail?: T): void;
+publish<T>(channel: string, payload?: T): void;
 ```
 
 #### Parameters
 
 | Name      | Type     | Description                              |
 | --------- | -------- | ---------------------------------------- |
-| eventType | `string` | name of event channel to send payload on |
-| detail    | `any`    | payload to be sent                       |
+| channel | `string` | name of event channel to send payload on |
+| payload    | `any`    | payload to be sent                       |
 
 **Returns** - void
 
@@ -313,14 +320,14 @@ publish<T>(eventType: string, detail?: T): void;
 Get the latest published payload on the specified event channel.
 
 ```typescript
-getLatest<T>(eventType: string): T | undefined;
+getLatest<T>(channel: string): T | undefined;
 ```
 
 #### Parameters
 
 | Name      | Type     | Description                              |
 | --------- | -------- | ---------------------------------------- |
-| eventType | `string` | name of the event channel to fetch the latest payload from |
+| channel | `string` | name of the event channel to fetch the latest payload from |
 
 **Returns** - the latest payload or `undefined`
 
@@ -329,13 +336,13 @@ getLatest<T>(eventType: string): T | undefined;
 Get the schema registered on the specified event channel.
 
 ```typescript
-getSchema<T>(eventType: string): any | undefined;
+getSchema<T>(channel: string): any | undefined;
 ```
 
 #### Parameters
 
 | Name      | Type     | Description                              |
 | --------- | -------- | ---------------------------------------- |
-| eventType | `string` | name of the event channel to fetch the schema from |
+| channel | `string` | name of the event channel to fetch the schema from |
 
 **Returns** - the schema or `undefined`

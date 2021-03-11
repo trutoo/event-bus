@@ -1,11 +1,11 @@
-import { DetailMismatchError, EventBus, SchemaMismatchError } from './event-bus';
+import { PayloadMismatchError, EventBus, SchemaMismatchError } from './event-bus';
 import AdvancedSchema from './fixtures/advanced-schema.json';
 
 //------------------------------------------------------------------------------------
-// DetailMismatchError
+// PayloadMismatchError
 //------------------------------------------------------------------------------------
 
-describe('[DetailMismatchError]', () => {
+describe('[PayloadMismatchError]', () => {
   const captureStackTrace = Error.captureStackTrace;
 
   afterEach(() => {
@@ -14,20 +14,20 @@ describe('[DetailMismatchError]', () => {
 
   it('should create detailed errors', () => {
     const schema = { type: 'boolean' }
-    const detail = true;
+    const payload = true;
     Error.captureStackTrace = jest.fn();
-    const error = new DetailMismatchError('channel', schema, detail);
-    expect(Error.captureStackTrace).toHaveBeenCalledWith(error, DetailMismatchError);
+    const error = new PayloadMismatchError('channel', schema, payload);
+    expect(Error.captureStackTrace).toHaveBeenCalledWith(error, PayloadMismatchError);
     expect(error).toBeInstanceOf(Error);
-    expect(error.eventType).toBe('channel');
+    expect(error.channel).toBe('channel');
     expect(error.schema).toStrictEqual(schema);
-    expect(error.detail).toStrictEqual(detail);
+    expect(error.payload).toStrictEqual(payload);
   });
 
 
   it('should not call captureStackTrace if it is not defined', () => {
     (Error as any).captureStackTrace = undefined;
-    new DetailMismatchError('channel', null, null);
+    new PayloadMismatchError('channel', null, null);
     expect(Error.captureStackTrace).toBeFalsy();
   });
 });
@@ -50,7 +50,7 @@ describe('[SchemaMismatchError]', () => {
     const error = new SchemaMismatchError('channel', schema, newSchema);
     expect(Error.captureStackTrace).toHaveBeenCalledWith(error, SchemaMismatchError);
     expect(error).toBeInstanceOf(Error);
-    expect(error.eventType).toBe('channel');
+    expect(error.channel).toBe('channel');
     expect(error.schema).toStrictEqual(schema);
     expect(error.newSchema).toStrictEqual(newSchema);
   });
@@ -208,26 +208,26 @@ describe('[EventBus]: getSchema', () => {
 describe('[EventBus]: subscribe and publish', () => {
   it('should receive same data as published', () => {
     const eventBus = new EventBus();
-    const sent = { test1: true };
+    const payload = { test1: true };
     const callback = jest.fn();
     eventBus.subscribe('test1', callback);
     expect(callback).not.toHaveBeenCalled();
-    eventBus.publish('test1', sent);
-    expect(callback).toBeCalledWith(sent);
+    eventBus.publish('test1', payload);
+    expect(callback).toBeCalledWith({ channel: 'test1', payload });
   });
 
   it('should receive events on wildcard channel * regardless of channel it was published on', () => {
     const eventBus = new EventBus();
-    const sent = { test1: true };
+    const payload = { test1: true };
     const callback = jest.fn();
     eventBus.subscribe('*', callback);
-    eventBus.publish('test1', sent);
-    expect(callback).toBeCalledWith({ eventType: 'test1', detail: sent });
+    eventBus.publish('test1', payload);
+    expect(callback).toBeCalledWith({ channel: 'test1', payload: payload });
   });
 
   it('should handle more advanced schemas', () => {
     const eventBus = new EventBus();
-    const sent = {
+    const payload = {
       name: 'Milk',
       amount: '1000 ml',
       price: 0.99,
@@ -242,17 +242,17 @@ describe('[EventBus]: subscribe and publish', () => {
     const callback = jest.fn();
     eventBus.register('test1', AdvancedSchema);
     eventBus.subscribe('test1', callback);
-    eventBus.publish('test1', sent);
-    expect(callback).toBeCalledWith(sent);
+    eventBus.publish('test1', payload);
+    expect(callback).toBeCalledWith({ channel: 'test1', payload });
   });
 
   it('should subscribe to an existing channel with replay of last event', () => {
     const eventBus = new EventBus();
-    const sent = { test1: true };
+    const payload = { test1: true };
     const callback = jest.fn();
-    eventBus.publish('test1', sent);
+    eventBus.publish('test1', payload);
     eventBus.subscribe('test1', true, callback);
-    expect(callback).toBeCalledWith(sent);
+    expect(callback).toBeCalledWith({ channel: 'test1', payload });
   });
 
   it('should handle multiple subscriptions with correct channels', () => {
