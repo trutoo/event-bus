@@ -252,6 +252,8 @@ register(channel: string, schema: object): boolean;
 
 **Returns** - returns true if event channel already existed of false if a new one was created.
 
+---
+
 ### Unregister
 
 Unregister the schema for the specified event type if channel exists.
@@ -267,6 +269,8 @@ unregister(channel: string): boolean;
 | channel | `string` | name of event channel to unregister schema from |
 
 **Returns** - returns true if event channel existed and an existing schema was removed.
+
+---
 
 ### Subscribe
 
@@ -298,6 +302,8 @@ Callbacks will be fired when event is published on a subscribed channel with the
 
 **Returns** - object containing an unsubscribe method
 
+---
+
 ### Publish
 
 Publish to event channel with an optional payload triggering all subscription callbacks.
@@ -315,6 +321,8 @@ publish<T>(channel: string, payload?: T): void;
 
 **Returns** - void
 
+---
+
 ### Get Latest
 
 Get the latest published payload on the specified event channel.
@@ -330,6 +338,8 @@ getLatest<T>(channel: string): T | undefined;
 | channel | `string` | name of the event channel to fetch the latest payload from |
 
 **Returns** - the latest payload or `undefined`
+
+---
 
 ### Get Schema
 
