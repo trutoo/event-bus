@@ -58,7 +58,7 @@
     "eslint-config-prettier": "8.3.0",
     "eslint-plugin-prettier": "3.4.0",
     "husky": "6.0.0",
-    "jest": "26.6.3",
+    "jest": "27.0.6",
     "prettier": "2.3.2",
     "rimraf": "3.0.2",
     "rollup": "2.52.4",
@@ -66,7 +66,7 @@
     "rollup-plugin-terser": "7.0.2",
     "rollup-plugin-typescript2": "0.30.0",
     "semantic-release": "17.4.4",
-    "ts-jest": "26.5.6",
+    "ts-jest": "27.0.3",
     "typescript": "4.3.4"
   },
   "optionalDependencies": {
