@@ -1,19 +1,10 @@
 {
-  "extends": ["config:base", "group:monorepos"],
+  "extends": ["config:base"],
   "packageRules": [
     {
-      "updateTypes": ["major"],
+      "matchDepTypes": ["dependencies"],
       "automerge": true,
       "schedule": ["after 9pm on sunday"]
-    },
-    {
-      "updateTypes": ["minor", "patch", "pin", "digest"],
-      "groupName": "minor dependencies",
-      "automerge": true,
-      "automergeType": "branch",
-      "commitBodyTable": true,
-      "prConcurrentLimit": 10,
-      "schedule": ["after 9pm on sunday", "after 9pm on wednesday"]
     }
   ]
 }
