@@ -59,7 +59,7 @@
     "eslint-plugin-prettier": "4.0.0",
     "husky": "7.0.4",
     "jest": "27.5.1",
-    "prettier": "2.5.1",
+    "prettier": "2.6.0",
     "rimraf": "3.0.2",
     "rollup": "2.68.0",
     "rollup-plugin-node-polyfills": "0.2.1",
