@@ -1,4 +1,4 @@
-import { PayloadMismatchError, EventBus, SchemaMismatchError } from './event-bus';
+import { EventBus, PayloadMismatchError, SchemaMismatchError } from './event-bus';
 import AdvancedSchema from './fixtures/advanced-schema.json';
 
 //------------------------------------------------------------------------------------
@@ -13,7 +13,7 @@ describe('[PayloadMismatchError]', () => {
   });
 
   it('should create detailed errors', () => {
-    const schema = { type: 'boolean' }
+    const schema = { type: 'boolean' };
     const payload = true;
     Error.captureStackTrace = jest.fn();
     const error = new PayloadMismatchError('channel', schema, payload);
@@ -23,7 +23,6 @@ describe('[PayloadMismatchError]', () => {
     expect(error.schema).toStrictEqual(schema);
     expect(error.payload).toStrictEqual(payload);
   });
-
 
   it('should not call captureStackTrace if it is not defined', () => {
     (Error as any).captureStackTrace = undefined;
@@ -44,7 +43,7 @@ describe('[SchemaMismatchError]', () => {
   });
 
   it('should create detailed errors', () => {
-    const schema = { type: 'boolean' }
+    const schema = { type: 'boolean' };
     const newSchema = { type: 'string' };
     Error.captureStackTrace = jest.fn();
     const error = new SchemaMismatchError('channel', schema, newSchema);
@@ -54,7 +53,6 @@ describe('[SchemaMismatchError]', () => {
     expect(error.schema).toStrictEqual(schema);
     expect(error.newSchema).toStrictEqual(newSchema);
   });
-
 
   it('should not call captureStackTrace if it is not defined', () => {
     (Error as any).captureStackTrace = undefined;
@@ -174,7 +172,6 @@ describe('[EventBus]: publish', () => {
   });
 });
 
-
 //------------------------------------------------------------------------------------
 // getLatest
 //------------------------------------------------------------------------------------
@@ -183,8 +180,8 @@ describe('[EventBus]: getLatest', () => {
   it('should return the latest published event on channel', () => {
     const eventBus = new EventBus();
     eventBus.publish('test1', true);
-    expect(eventBus.getLatest('test1')).toBe(true)
-    expect(eventBus.getLatest('test2')).toBeUndefined()
+    expect(eventBus.getLatest('test1')).toBe(true);
+    expect(eventBus.getLatest('test2')).toBeUndefined();
   });
 });
 
@@ -196,8 +193,8 @@ describe('[EventBus]: getSchema', () => {
   it('should return the schema registered on channel', () => {
     const eventBus = new EventBus();
     eventBus.register('test1', { type: 'boolean' });
-    expect(eventBus.getSchema('test1')).toStrictEqual({ type: 'boolean' })
-    expect(eventBus.getSchema('test2')).toBeUndefined()
+    expect(eventBus.getSchema('test1')).toStrictEqual({ type: 'boolean' });
+    expect(eventBus.getSchema('test2')).toBeUndefined();
   });
 });
 
@@ -235,9 +232,9 @@ describe('[EventBus]: subscribe and publish', () => {
       stores: [
         {
           name: 'ACME Food AB',
-          url: 'acme-food.com'
-        }
-      ]
+          url: 'acme-food.com',
+        },
+      ],
     };
     const callback = jest.fn();
     eventBus.register('test1', AdvancedSchema);

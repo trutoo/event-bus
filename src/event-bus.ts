@@ -1,7 +1,7 @@
 import { validate } from 'jsonschema';
 import { deepCompareStrict } from 'jsonschema/lib/helpers';
 
-export type ChannelEvent<T> = { channel: string, payload: T | undefined };
+export type ChannelEvent<T> = { channel: string; payload: T | undefined };
 
 export type Callback<T> = (event: ChannelEvent<T>) => void;
 
@@ -17,9 +17,9 @@ export class PayloadMismatchError extends Error {
   constructor(public channel: string, public schema: any, public payload: any) {
     super(`payload does not match the specified schema for channel [${channel}].`);
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, PayloadMismatchError)
+      Error.captureStackTrace(this, PayloadMismatchError);
     }
-    this.name = "PayloadMismatchError";
+    this.name = 'PayloadMismatchError';
   }
 }
 
@@ -33,16 +33,16 @@ export class SchemaMismatchError extends Error {
   constructor(public channel: string, public schema: any, public newSchema: any) {
     super(`schema registration for [${channel}] must match already registered schema.`);
     if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, SchemaMismatchError)
+      Error.captureStackTrace(this, SchemaMismatchError);
     }
-    this.name = "SchemaMismatchError";
+    this.name = 'SchemaMismatchError';
   }
 }
 
 export class EventBus {
   private _lastId = 0;
   private _subscriptions: {
-    [channel: string]: { __replay?: any; __schema?: any;[id: string]: (payload: any) => void };
+    [channel: string]: { __replay?: any; __schema?: any; [id: string]: (payload: any) => void };
   } = {};
 
   private _getNextId() {
@@ -55,7 +55,7 @@ export class EventBus {
    * @param channel - name of event channel to register schema to
    * @param schema - all communication on channel must follow this schema
    * @returns returns true if event channel already existed of false if a new one was created
-   * 
+   *
    * @throws {@link SchemaMismatchError}
    * This exception is thrown if new schema does not match already registered schema.
    */
@@ -125,7 +125,7 @@ export class EventBus {
    * Publish to event channel with an optional payload triggering all subscription callbacks.
    * @param channel - name of event channel to send payload on
    * @param payload - payload to be sent
-   * 
+   *
    * @throws {@link PayloadMismatchError}
    * This exception is thrown if payload does is not valid against registered schema.
    */
@@ -137,14 +137,14 @@ export class EventBus {
     }
     this._subscriptions[channel].__replay = payload;
     Object.keys(this._subscriptions[channel])
-      .filter(key => !key.startsWith('__'))
-      .forEach(id => this._subscriptions[channel][id]({ channel, payload }));
+      .filter((key) => !key.startsWith('__'))
+      .forEach((id) => this._subscriptions[channel][id]({ channel, payload }));
 
     // Publish all events on the wildcard channel
     if (this._subscriptions['*']) {
       Object.keys(this._subscriptions['*'])
-        .filter(key => !key.startsWith('__'))
-        .forEach(id => this._subscriptions['*'][id]({ channel, payload }));
+        .filter((key) => !key.startsWith('__'))
+        .forEach((id) => this._subscriptions['*'][id]({ channel, payload }));
     }
   }
 
@@ -154,8 +154,7 @@ export class EventBus {
    * @returns the latest payload or `undefined`
    */
   getLatest<T>(channel: string): T | undefined {
-    if (this._subscriptions[channel])
-      return this._subscriptions[channel].__replay;
+    if (this._subscriptions[channel]) return this._subscriptions[channel].__replay;
   }
 
   /**
@@ -164,7 +163,6 @@ export class EventBus {
    * @returns the schema or `undefined`
    */
   getSchema(channel: string): any | undefined {
-    if (this._subscriptions[channel])
-      return this._subscriptions[channel].__schema;
+    if (this._subscriptions[channel]) return this._subscriptions[channel].__schema;
   }
 }

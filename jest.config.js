@@ -1,9 +1,12 @@
 module.exports = {
-  roots: ['<rootDir>/src'],
-  transform: {
-    '^.+\\.ts$': 'ts-jest',
+  preset: 'ts-jest',
+  globals: {
+    'ts-jest': {
+      tsconfig: {
+        target: 'es6',
+      },
+    },
   },
-  moduleDirectories: ['node_modules', 'src'],
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],
   coverageReporters: ['lcovonly', 'text', 'text-summary'],

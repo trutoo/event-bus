@@ -1,26 +1,20 @@
 {
-  "docthis.includeMemberOfOnClassMembers": false,
-  "docthis.includeMemberOfOnInterfaceMembers": false,
   "editor.formatOnSave": true,
   "editor.tabSize": 2,
-  "eslint.validate": ["javascript", "typescript"],
+  "eslint.validate": [
+    "javascript",
+    "typescript"
+  ],
   "files.associations": {
     ".releaserc": "jsonc"
   },
   "files.insertFinalNewline": true,
-  "highlight.regexes": {
-    "(Lang\\.[\\wåäöÅÄÖ.]+)": {
-      "color": "#98c379"
-    },
-    "(\\/\\/ ?(todo|ToDo|TODO):.+)": {
-      "color": "#ffa8e0"
-    }
-  },
+  "git.inputValidationSubjectLength": 72,
   "html.format.wrapAttributes": "force",
   "search.exclude": {
     "**/node_modules": true,
     "dist": true
   },
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "git.inputValidationSubjectLength": 72
+  "tsImportSorter.configuration.wrappingStyle": "prettier",
+  "typescript.tsdk": "node_modules/typescript/lib"
 }
