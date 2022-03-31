@@ -2,10 +2,11 @@
   "extends": ["config:base"],
   "packageRules": [
     {
-			"packagePatterns": ["*"],
+      "packagePatterns": ["*"],
 			"enabled": false
 		},
     {
+      "labels": ["dependencies"],
       "matchDepTypes": ["dependencies"],
       "automerge": true,
       "schedule": ["after 9pm on sunday"],
