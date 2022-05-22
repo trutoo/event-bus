@@ -43,7 +43,7 @@
     "release": "semantic-release"
   },
   "dependencies": {
-    "jsonschema": "1.4.0"
+    "jsonschema": "1.4.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "21.0.2",
