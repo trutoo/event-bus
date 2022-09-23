@@ -138,13 +138,23 @@ export class EventBus {
     this._subscriptions[channel].__replay = payload;
     Object.keys(this._subscriptions[channel])
       .filter((key) => !key.startsWith('__'))
-      .forEach((id) => this._subscriptions[channel][id]({ channel, payload }));
+      .forEach((id) => {
+        const callback = this._subscriptions[channel][id];
+        if (!callback || typeof callback !== 'function') throw new Error(`Invalid callback for channel [${channel}]`);
+
+        return callback({ channel, payload });
+      });
 
     // Publish all events on the wildcard channel
     if (this._subscriptions['*']) {
       Object.keys(this._subscriptions['*'])
         .filter((key) => !key.startsWith('__'))
-        .forEach((id) => this._subscriptions['*'][id]({ channel, payload }));
+        .forEach((id) => {
+          const callback = this._subscriptions['*'][id];
+          if (!callback || typeof callback !== 'function') throw new Error(`Invalid callback for channel [${channel}]`);
+
+          return callback({ channel, payload });
+        });
     }
   }
 
