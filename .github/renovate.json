@@ -1,15 +1,26 @@
 {
-  "extends": ["config:base"],
+  "extends": [
+    "config:base"
+  ],
   "packageRules": [
     {
-			"packagePatterns": ["*"],
-			"enabled": false
-		},
+      "packagePatterns": [
+        "*"
+      ],
+      "enabled": false
+    },
     {
-      "matchDepTypes": ["dependencies"],
+      "labels": [
+        "dependencies"
+      ],
+      "matchDepTypes": [
+        "dependencies"
+      ],
       "automerge": true,
-      "schedule": ["after 9pm on sunday"],
-			"enabled": true
+      "schedule": [
+        "after 9pm on sunday"
+      ],
+      "enabled": true
     }
   ]
 }
