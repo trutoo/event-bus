@@ -1,0 +1,37 @@
+name: ❓ Question
+description: Question or documentation improvement
+labels: [❓ question]
+body:
+  - type: textarea
+    id:
+    attributes: 
+      label: What is hard to understand or you feel lacks information? Please describe.
+      description: |
+        A clear and concise description where the confusion lies. Ex. I don't understand the [...]
+    validations:
+      required: true
+
+  - type: textarea
+    id:
+    attributes: 
+      label: Describe your current understanding
+      description: |
+        A clear and concise description of how you interpret the situation.
+    validations:
+      required: true
+
+  - type: textarea
+    id:
+    attributes: 
+      label: Describe the improvement you'd like
+      description: |
+        A clear and concise description of what you want to see.
+    validations:
+      required: true
+
+  - type: textarea
+    id:
+    attributes: 
+      label: Additional context
+      description: |
+        Add any other context or screenshots about the question or documentation here.

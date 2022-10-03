@@ -112,12 +112,13 @@ export class EventBus {
     if (typeof callback !== 'function')
       throw new Error('Callback function must be supplied as either the second or third argument.');
 
-    if (!this._subscriptions[channel]) this._subscriptions[channel] = {};
-    else if (replay) callback({ channel, payload: this._subscriptions[channel].__replay });
+    let channelObject = this._subscriptions[channel];
+    if (!channelObject) channelObject = this._subscriptions[channel] = {};
+    else if (replay) callback({ channel, payload: channelObject.__replay });
 
-    this._subscriptions[channel][id] = callback;
+    channelObject[id] = callback;
     return {
-      unsubscribe: () => delete this._subscriptions[channel][id],
+      unsubscribe: () => delete channelObject[id],
     };
   }
 
@@ -130,21 +131,30 @@ export class EventBus {
    * This exception is thrown if payload does is not valid against registered schema.
    */
   publish<T>(channel: string, payload?: T) {
-    if (!this._subscriptions[channel]) this._subscriptions[channel] = {};
-    const schema = this._subscriptions[channel].__schema;
+    let channelObject = this._subscriptions[channel];
+    if (!channelObject) channelObject = this._subscriptions[channel] = {};
+    const schema = channelObject.__schema;
     if (typeof payload !== 'undefined' && schema && !validate(payload, schema).valid) {
       throw new PayloadMismatchError(channel, schema, payload);
     }
-    this._subscriptions[channel].__replay = payload;
-    Object.keys(this._subscriptions[channel])
-      .filter((key) => !key.startsWith('__'))
-      .forEach((id) => this._subscriptions[channel][id]({ channel, payload }));
+    channelObject.__replay = payload;
+
+    for (const id in channelObject) {
+      // istanbul ignore if - ignore robustness check
+      if (id === '__replay' || id === '__schema') continue;
+      if (typeof channelObject[id] !== 'function') continue;
+      channelObject[id]({ channel, payload });
+    }
 
     // Publish all events on the wildcard channel
-    if (this._subscriptions['*']) {
-      Object.keys(this._subscriptions['*'])
-        .filter((key) => !key.startsWith('__'))
-        .forEach((id) => this._subscriptions['*'][id]({ channel, payload }));
+    channelObject = this._subscriptions['*'];
+    if (channelObject) {
+      for (const id in channelObject) {
+        // istanbul ignore if - ignore robustness check
+        if (id === '__replay' || id === '__schema') continue;
+        if (typeof channelObject[id] !== 'function') continue;
+        channelObject[id]({ channel, payload });
+      }
     }
   }
 

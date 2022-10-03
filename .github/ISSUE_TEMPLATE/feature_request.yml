@@ -1,0 +1,48 @@
+name: ✨ Feature Request
+description: Request a feature or enhancement
+labels: [✨ feature]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Thank you for requesting a feature but before you do please...
+        1. Check for existing open/closed issues for a possible duplicate before creating a new issue: https://github.com/trutoo/event-bus/issues
+
+        ### Help us help you better
+
+  - type: textarea
+    id: justification
+    attributes:
+      label: Problem Statement
+      description: |
+        Please provide valid reason(s) why this should be a part of @trutoo/event-bus.
+        Is this feature meant to solve an existing problem, if so please mention it as well.
+      placeholder: A clear and concise description of what the problem is. Ex. I am always frustrated when [...]
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: |
+        Please provide a description on how you would like the feature to work.
+      placeholder: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: |
+        Describe alternatives you have considered.
+      placeholder: A clear and concise description of any alternative solutions or features you have considered.
+
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional Information
+      description: |
+        What resources (links, inspirations, designs, screenshots, etc.) do you have to assist this effort?
+      placeholder: Any and every additional information is always welcome

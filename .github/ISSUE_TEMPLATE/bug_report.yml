@@ -1,0 +1,77 @@
+name: 🐛 Bug Report
+description: Create a bug report to help us improve
+labels: [🐛 bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Thank you for reporting a bug but before you do please...
+        1. Check for existing open/closed issues for a possible duplicate before creating a new issue: https://github.com/trutoo/event-bus/issues
+
+        ### Help us help you better
+
+  - type: input
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what you expected to happen.
+      placeholder: |
+        What is the bug? And why is it a bug?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Let us know how we reproduce it too.
+      value: |
+        1. Go to '...' 
+        2. Click on '...' 
+        3. Scroll down to '...' 
+        4. See error
+
+  - type: input
+    id: library-version
+    attributes:
+      label: Library Version
+      description: The version of library you are using.
+      placeholder: 1.0.0
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: browser
+    attributes:
+      label: Browser
+      description: The browser(s) this issue occurred on
+      options:
+        - label: Chrome
+        - label: Edge*
+        - label: Safari
+        - label: Firefox
+        - label: Opera
+        - label: IE
+        - label: Other
+
+  - type: checkboxes
+    id: platform
+    attributes:
+      label: Platform
+      description: The platform(s) this issue occurred on
+      options:
+        - label: Windows
+        - label: MacOS
+        - label: Linux
+        - label: Android
+        - label: iOS
+        - label: Other
+
+  - type: textarea
+    id: additional-information
+    attributes:
+      label: Additional Information
+      description: |
+        Use this section to provide any additional information you might have like screenshots, notes, or links to ideas.
+      placeholder: Any and every additional information is always welcome

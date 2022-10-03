@@ -1,11 +1,7 @@
 module.exports = {
   preset: 'ts-jest',
-  globals: {
-    'ts-jest': {
-      tsconfig: {
-        target: 'es6',
-      },
-    },
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { tsconfig: { target: 'es6' } }],
   },
   collectCoverage: true,
   collectCoverageFrom: ['src/**/*.ts', '!src/**/*.d.ts'],

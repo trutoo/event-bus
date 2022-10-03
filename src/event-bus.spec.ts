@@ -170,6 +170,16 @@ describe('[EventBus]: publish', () => {
     };
     expect(publish).toThrowError();
   });
+
+  it("should skip calling registered callbacks that aren't functions in channel", () => {
+    const eventBus = new EventBus();
+    const callback = jest.fn();
+    // Mutate function to include invalid types
+    eventBus['_subscriptions'].test1 = [null, undefined, 1, 'hello', true, false, {}, [], callback] as any;
+    eventBus['_subscriptions']['*'] = [null, undefined, 1, 'hello', true, false, {}, [], callback] as any;
+    eventBus.publish('test1', true);
+    expect(callback).toHaveBeenCalledTimes(2);
+  });
 });
 
 //------------------------------------------------------------------------------------
