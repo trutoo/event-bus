@@ -27,15 +27,11 @@ jobs:
         with:
           node-version: 20.x
 
-      - name: Append npm registry authentication to .npmrc
-        run: |
-          echo -e '\n//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}\n' >> ${NPM_CONFIG_USERCONFIG}
-
-      - name: Install dependencies using CI
-        run: npm ci
+      - name: Install dependencies
+        run: yarn --immutable
 
       - name: Run tests on package
-        run: npm test
+        run: yarn test
 
       - name: Update coveralls
         uses: coverallsapp/github-action@v2
@@ -43,14 +39,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish package to GitHub Packages and GitHub Release
-        run: npm run release
+        run: yarn release
         env:
-          NPM_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used to verify access through semantic release
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used by standard npm publish
+          NPM_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }} # Used to verify access through semantic release
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }} # Used by standard npm publish
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used for github releases through semantic release
-
-      - name: Publish package to NPM
-        run: npm publish --access public --@trutoo:registry=https://registry.npmjs.org
-        if: env.VERSION != null # Only if semantic-release publishes the package
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # Used by standard npm publish

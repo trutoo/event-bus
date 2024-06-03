@@ -35,11 +35,19 @@ This project was created to improve upon some of the deficits CustomEvents has i
 
 ## Installation
 
-Install from the [npm registry @trutoo/event-bus](https://www.npmjs.com/package/@trutoo/event-bus)
+Install the package from the [npm registry @trutoo/event-bus](https://www.npmjs.com/package/@trutoo/event-bus) as a production/runtime dependency.
 
 ```bash
 npm install @trutoo/event-bus
 ```
+
+or
+
+```bash
+yarn add @trutoo/event-bus
+```
+
+_**Note: dropped publishing to GitHub packages to simplify releases.**_
 
 Then either import the side effects only exposing a `eventBus` global instance.
 

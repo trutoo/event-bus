@@ -31,10 +31,10 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - name: Install dependencies using CI
-        run: npm ci
+        run: yarn --immutable
 
       - name: Run tests on package
-        run: npm test
+        run: yarn test
 
       - name: Update coveralls
         uses: coverallsapp/github-action@v2
@@ -42,4 +42,4 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build package
-        run: npm run build
+        run: yarn build

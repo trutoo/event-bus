@@ -28,11 +28,5 @@ export default {
         assets: [{ path: 'dist/*.tgz', label: 'Distribution package' }],
       },
     ],
-    [
-      '@semantic-release/exec',
-      {
-        successCmd: 'echo "VERSION=${nextRelease.version}" >> $GITHUB_ENV',
-      },
-    ],
   ],
 };
