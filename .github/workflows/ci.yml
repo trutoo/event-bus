@@ -26,9 +26,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: ⚙️ Enable corepack
-        if: inputs.enable-corepack == 'true'
         shell: bash
-        working-directory: ${{ inputs.cwd }}
         run: corepack enable
 
       - name: Set up Node.js version ${{ matrix.node }}
