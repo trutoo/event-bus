@@ -19,20 +19,10 @@ inputs:
     description: 'Cache yarn install state, might speed up resolution step when node-modules cache is activated (invalidated lock/os/node-version/branch)'
     required: false
     default: 'false'
-  enable-corepack:
-    description: 'Enable corepack'
-    required: false
-    default: 'true'
 
 runs:
   using: 'composite'
   steps:
-    - name: ⚙️ Enable corepack
-      if: inputs.enable-corepack == 'true'
-      shell: bash
-      working-directory: ${{ inputs.cwd }}
-      run: corepack enable
-
     - name: ⚙️ Expose yarn config as "$GITHUB_OUTPUT"
       id: yarn-config
       shell: bash

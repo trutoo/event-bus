@@ -22,6 +22,12 @@ jobs:
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
 
+      - name: ⚙️ Enable corepack
+        if: inputs.enable-corepack == 'true'
+        shell: bash
+        working-directory: ${{ inputs.cwd }}
+        run: corepack enable
+
       - name: Set up Node.js version 20.x
         uses: actions/setup-node@v4
         with:
