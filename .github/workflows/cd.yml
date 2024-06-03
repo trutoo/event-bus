@@ -12,12 +12,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out source code
+      - name: ☁️ Check out source code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set global git user and email
+      - name: ⚙️ Set global git user and email
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
@@ -26,24 +26,23 @@ jobs:
         shell: bash
         run: corepack enable
 
-      - name: Set up Node.js version 20.x
+      - name: ⚙️ Set up Node.js version 20.x
         uses: actions/setup-node@v4
         with:
           node-version: 20.x
-          cache: 'yarn'
 
       - name: 📥 Install dependencies
         uses: ./.github/actions/install
 
-      - name: Run tests on package
+      - name: 🧪 Run tests on package
         run: yarn test
 
-      - name: Update coveralls
+      - name: 📝 Update coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and publish package to GitHub Packages and GitHub Release
+      - name: 🚀 Build and publish package to GitHub Packages and GitHub Release
         run: yarn release
         env:
           NPM_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }} # Used to verify access through semantic release

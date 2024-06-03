@@ -22,29 +22,28 @@ jobs:
         node: [18.x, 20.x]
 
     steps:
-      - name: Check out source code
+      - name: ☁️ Check out source code
         uses: actions/checkout@v4
 
       - name: ⚙️ Enable corepack
         shell: bash
         run: corepack enable
 
-      - name: Set up Node.js version ${{ matrix.node }}
+      - name: ⚙️ Set up Node.js version ${{ matrix.node }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          cache: 'yarn'
 
       - name: 📥 Install dependencies
         uses: ./.github/actions/install
 
-      - name: Run tests on package
+      - name: 🧪 Run tests on package
         run: yarn test
 
-      - name: Update coveralls
+      - name: 📝 Update coveralls
         uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build package
+      - name: 📦 Build package
         run: yarn build
