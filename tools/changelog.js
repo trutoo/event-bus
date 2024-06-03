@@ -4,114 +4,127 @@ import { resolve } from 'path';
 
 import compareFunc from 'compare-func';
 
-const parserOpts = {
-  headerPattern: /^(\w*)(?:\((.*)\))?: (.*)$/,
-  headerCorrespondence: ['type', 'scope', 'subject'],
-  noteKeywords: ['BREAKING CHANGE', 'BREAKING CHANGES', 'BREAKING'],
-  revertPattern: /^revert:\s([\s\S]*?)\s*This reverts commit (\w*)\./,
-  revertCorrespondence: ['header', 'hash'],
-};
+function createParserOpts() {
+  return {
+    headerPattern: /^(\w*)(?:\((.*)\))?: (.*)$/,
+    headerCorrespondence: ['type', 'scope', 'subject'],
+    noteKeywords: ['BREAKING CHANGE', 'BREAKING CHANGES', 'BREAKING'],
+    revertPattern: /^(?:Revert|revert:)\s"?([\s\S]+?)"?\s*This reverts commit (\w{7,40})\b/i,
+    revertCorrespondence: ['header', 'hash'],
+  };
+}
 
-const recommendedBumpOpts = {
-  parserOpts,
+function whatBump(commits) {
+  let level = 2;
+  let breakings = 0;
+  let features = 0;
 
-  whatBump: (commits) => {
-    let level = 2;
-    let breakings = 0;
-    let features = 0;
-
-    commits.forEach((commit) => {
-      if (commit.notes.length > 0) {
-        breakings += commit.notes.length;
-        level = 0;
-      } else if (commit.type === 'feat') {
-        features += 1;
-        if (level === 2) {
-          level = 1;
-        }
+  commits.forEach((commit) => {
+    if (commit.notes.length > 0) {
+      breakings += commit.notes.length;
+      level = 0;
+    } else if (commit.type === 'feat') {
+      features += 1;
+      if (level === 2) {
+        level = 1;
       }
-    });
+    }
+  });
 
-    return {
-      level: level,
-      reason:
-        breakings === 1
-          ? `There is ${breakings} BREAKING CHANGE and ${features} features`
-          : `There are ${breakings} BREAKING CHANGES and ${features} features`,
-    };
-  },
-};
+  return {
+    level,
+    reason:
+      breakings === 1
+        ? `There is ${breakings} BREAKING CHANGE and ${features} features`
+        : `There are ${breakings} BREAKING CHANGES and ${features} features`,
+  };
+}
+
+const templateDir = resolve(process.cwd(), 'node_modules', 'conventional-changelog-angular', 'src', 'templates');
+
+export async function createWriterOpts() {
+  const [template, header, commit, footer] = await Promise.all([
+    readFile(resolve(templateDir, 'template.hbs'), 'utf-8'),
+    readFile(resolve(templateDir, 'header.hbs'), 'utf-8'),
+    readFile(resolve(templateDir, 'commit.hbs'), 'utf-8'),
+    readFile(resolve(templateDir, 'footer.hbs'), 'utf-8'),
+  ]);
+  const writerOpts = getWriterOpts();
+
+  writerOpts.mainTemplate = template;
+  writerOpts.headerPartial = header;
+  writerOpts.commitPartial = commit;
+  writerOpts.footerPartial = footer;
+
+  return writerOpts;
+}
 
 function getWriterOpts() {
   return {
     transform: (commit, context) => {
       let discard = true;
-      const issues = [];
-
-      commit.notes.forEach((note) => {
-        note.title = 'BREAKING CHANGES';
+      const notes = commit.notes.map((note) => {
         discard = false;
+
+        return {
+          ...note,
+          title: 'BREAKING CHANGES',
+        };
       });
 
+      let type = commit.type;
+
       if (commit.type === 'feat') {
-        commit.type = 'Features';
+        type = 'Features';
       } else if (commit.type === 'fix') {
-        commit.type = 'Bug Fixes';
+        type = 'Bug Fixes';
       } else if (commit.type === 'perf') {
-        commit.type = 'Performance Improvements';
+        type = 'Performance Improvements';
       } else if (commit.type === 'chore' && commit.scope === 'deps') {
         commit.type = 'Dependency Updates';
         commit.scope = '';
+      } else if (commit.type === 'revert' || commit.revert) {
+        type = 'Reverts';
       } else if (discard) {
         // Move up earlier to filter below
         return;
       } else if (commit.type === 'k8s') {
         commit.type = 'Kubernetes';
-      } else if (commit.type === 'revert') {
-        commit.type = 'Reverts';
       } else if (commit.type === 'docs') {
-        commit.type = 'Documentation';
+        type = 'Documentation';
       } else if (commit.type === 'style') {
-        commit.type = 'Styles';
+        type = 'Styles';
       } else if (commit.type === 'refactor') {
-        commit.type = 'Code Refactoring';
+        type = 'Code Refactoring';
       } else if (commit.type === 'test') {
-        commit.type = 'Tests';
+        type = 'Tests';
       } else if (commit.type === 'build') {
-        commit.type = 'Build System';
+        type = 'Build System';
       } else if (commit.type === 'ci') {
-        commit.type = 'Continuous Integration';
+        type = 'Continuous Integration';
       } else if (commit.type === 'chore') {
         commit.type = 'Chore';
       }
 
-      if (commit.scope === '*') {
-        commit.scope = '';
-      }
+      const scope = commit.scope === '*' ? '' : commit.scope;
+      const shortHash = typeof commit.hash === 'string' ? commit.hash.substring(0, 7) : commit.shortHash;
 
-      if (typeof commit.hash === 'string') {
-        commit.shortHash = commit.hash.substring(0, 7);
-      }
+      const issues = [];
+      let subject = commit.subject;
 
-      if (typeof commit.subject === 'string') {
-        let url;
-        if (context.packageData.bugs)
-          url = typeof context.packageData.bugs == 'object' ? context.packageData.bugs.url : context.packageData.bugs;
-        else if (context.repository) url = `${context.host}/${context.owner}/${context.repository}/issues/`;
-        else url = context.repoUrl;
-        if (!url.endsWith('/')) url += '/';
-
+      if (typeof subject === 'string') {
+        let url = context.repository ? `${context.host}/${context.owner}/${context.repository}` : context.repoUrl;
         if (url) {
+          url = `${url}/issues/`;
           // Issue URLs.
-          commit.subject = commit.subject.replace(/#(\d+)/g, (_, issue) => {
+          subject = subject.replace(/#([0-9]+)/g, (_, issue) => {
             issues.push(issue);
             return `[#${issue}](${url}${issue})`;
           });
         }
-
         if (context.host) {
           // User URLs.
-          commit.subject = commit.subject.replace(/\B@([\w0-9](?:-?[\w0-9/]){0,38})/g, (_, username) => {
+          subject = subject.replace(/\B@([a-z0-9](?:-?[a-z0-9/]){0,38})/g, (_, username) => {
             if (username.includes('/')) {
               return `@${username}`;
             }
@@ -122,15 +135,16 @@ function getWriterOpts() {
       }
 
       // remove references that already appear in the subject
-      commit.references = commit.references.filter((reference) => {
-        if (issues.indexOf(reference.issue) === -1) {
-          return true;
-        }
+      const references = commit.references.filter((reference) => !issues.includes(reference.issue));
 
-        return false;
-      });
-
-      return commit;
+      return {
+        notes,
+        type,
+        scope,
+        shortHash,
+        subject,
+        references,
+      };
     },
     groupBy: 'type',
     commitGroupsSort: 'title',
@@ -140,20 +154,10 @@ function getWriterOpts() {
   };
 }
 
-const templates = resolve(process.cwd(), 'node_modules', 'conventional-changelog-angular', 'templates');
-
-export default Promise.all([
-  readFile(resolve(templates, 'template.hbs'), 'utf-8'),
-  readFile(resolve(templates, 'header.hbs'), 'utf-8'),
-  readFile(resolve(templates, 'commit.hbs'), 'utf-8'),
-  readFile(resolve(templates, 'footer.hbs'), 'utf-8'),
-]).then(([template, header, commit, footer]) => {
-  const writerOpts = getWriterOpts();
-
-  writerOpts.mainTemplate = template;
-  writerOpts.headerPartial = header;
-  writerOpts.commitPartial = commit;
-  writerOpts.footerPartial = footer;
-
-  return { recommendedBumpOpts, parserOpts, writerOpts };
-});
+export default async function createPreset() {
+  return {
+    parser: createParserOpts(),
+    writer: await createWriterOpts(),
+    whatBump,
+  };
+}
