@@ -45,6 +45,6 @@ jobs:
       - name: 🚀 Build and publish package to GitHub Packages and GitHub Release
         run: yarn release
         env:
-          NPM_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }} # Used to verify access through semantic release
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }} # Used by standard npm publish
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }} # Used to verify access through semantic release
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }} # Used by standard npm publish
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used for github releases through semantic release
