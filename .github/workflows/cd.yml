@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Check out source code
-        uses: actions/checkout@v2-beta
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -23,9 +23,10 @@ jobs:
           git config --global user.email "action@github.com"
 
       - name: Set up Node.js version 20.x
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 20.x
+          cache: 'yarn'
 
       - name: Install dependencies
         run: yarn --immutable
