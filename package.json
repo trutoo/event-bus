@@ -14,7 +14,10 @@
     "url": "https://www.trutoo.com/"
   },
   "license": "MIT",
-  "repository": "https://github.com/trutoo/event-bus.git",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trutoo/event-bus.git"
+  },
   "bugs": "https://github.com/trutoo/event-bus/issues",
   "contributors": [
     {
