@@ -1,5 +1,5 @@
-import { EventBus, PayloadMismatchError, SchemaMismatchError } from './event-bus';
 import AdvancedSchema from './fixtures/advanced-schema.json';
+import { EventBus, PayloadMismatchError, SchemaMismatchError } from './event-bus';
 
 //------------------------------------------------------------------------------------
 // PayloadMismatchError

@@ -6,11 +6,17 @@ declare global {
 
 export const getGlobal = function () {
   /* istanbul ignore next */
-  if (typeof self !== 'undefined') { return self; }
+  if (typeof self !== 'undefined') {
+    return self;
+  }
   /* istanbul ignore next */
-  if (typeof window !== 'undefined') { return window; }
+  if (typeof window !== 'undefined') {
+    return window;
+  }
   /* istanbul ignore next */
-  if (typeof global !== 'undefined') { return global; }
+  if (typeof global !== 'undefined') {
+    return global;
+  }
   /* istanbul ignore next */
   throw new Error('unable to locate global object');
 };

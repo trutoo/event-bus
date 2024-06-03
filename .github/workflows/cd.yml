@@ -3,12 +3,12 @@ name: Continuous Delivery
 on:
   push:
     branches:
-      - master
+      - main
       - release/*
 
 jobs:
   delivery:
-    name: Node 18.x
+    name: Node 20.x
     runs-on: ubuntu-latest
 
     steps:
@@ -22,12 +22,10 @@ jobs:
           git config --global user.name "GitHub Action"
           git config --global user.email "action@github.com"
 
-      - name: Set up Node.js version 18.x
+      - name: Set up Node.js version 20.x
         uses: actions/setup-node@v3
         with:
-          node-version: 18.x
-          registry-url: https://npm.pkg.github.com
-          scope: trutoo
+          node-version: 20.x
 
       - name: Append npm registry authentication to .npmrc
         run: |
@@ -35,14 +33,12 @@ jobs:
 
       - name: Install dependencies using CI
         run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used in .npmrc to install packages from github
 
       - name: Run tests on package
         run: npm test
 
       - name: Update coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 

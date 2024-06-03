@@ -1,5 +1,7 @@
 'use strict';
-const commit = require('fs').readFileSync(process.env.HUSKY_GIT_PARAMS, 'utf8');
+import { readFileSync } from 'fs';
+
+const commit = readFileSync(process.env.HUSKY_GIT_PARAMS, 'utf8');
 
 if (/^(merge|chore\((release|deps)\): .+)/i.test(commit)) {
   process.exit(0);

@@ -1,9 +1,8 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 'use strict';
-const Q = require('q');
-const compareFunc = require('compare-func');
-const readFile = Q.denodeify(require('fs').readFile);
-const resolve = require('path').resolve;
+import { readFile } from 'fs/promises';
+import { resolve } from 'path';
+
+import compareFunc from 'compare-func';
 
 const parserOpts = {
   headerPattern: /^(\w*)(?:\((.*)\))?: (.*)$/,
@@ -16,12 +15,12 @@ const parserOpts = {
 const recommendedBumpOpts = {
   parserOpts,
 
-  whatBump: commits => {
+  whatBump: (commits) => {
     let level = 2;
     let breakings = 0;
     let features = 0;
 
-    commits.forEach(commit => {
+    commits.forEach((commit) => {
       if (commit.notes.length > 0) {
         breakings += commit.notes.length;
         level = 0;
@@ -49,7 +48,7 @@ function getWriterOpts() {
       let discard = true;
       const issues = [];
 
-      commit.notes.forEach(note => {
+      commit.notes.forEach((note) => {
         note.title = 'BREAKING CHANGES';
         discard = false;
       });
@@ -123,7 +122,7 @@ function getWriterOpts() {
       }
 
       // remove references that already appear in the subject
-      commit.references = commit.references.filter(reference => {
+      commit.references = commit.references.filter((reference) => {
         if (issues.indexOf(reference.issue) === -1) {
           return true;
         }
@@ -143,12 +142,12 @@ function getWriterOpts() {
 
 const templates = resolve(process.cwd(), 'node_modules', 'conventional-changelog-angular', 'templates');
 
-module.exports = Q.all([
+export default Promise.all([
   readFile(resolve(templates, 'template.hbs'), 'utf-8'),
   readFile(resolve(templates, 'header.hbs'), 'utf-8'),
   readFile(resolve(templates, 'commit.hbs'), 'utf-8'),
   readFile(resolve(templates, 'footer.hbs'), 'utf-8'),
-]).spread((template, header, commit, footer) => {
+]).then(([template, header, commit, footer]) => {
   const writerOpts = getWriterOpts();
 
   writerOpts.mainTemplate = template;

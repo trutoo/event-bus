@@ -1,10 +1,6 @@
 {
   "type": "object",
-  "required": [
-    "name",
-    "amount",
-    "price"
-  ],
+  "required": ["name", "amount", "price"],
   "properties": {
     "name": {
       "type": "string"

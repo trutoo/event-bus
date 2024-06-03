@@ -10,7 +10,7 @@ on:
       - renovate/*
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   integration:
@@ -19,7 +19,7 @@ jobs:
 
     strategy:
       matrix:
-        node: [16.x, 17.x, 18.x]
+        node: [18.x, 20.x]
 
     steps:
       - name: Check out source code
@@ -29,19 +29,15 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
-          registry-url: https://npm.pkg.github.com
-          scope: trutoo
 
       - name: Install dependencies using CI
         run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used in .npmrc to install packages from github
 
       - name: Run tests on package
         run: npm test
 
       - name: Update coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
