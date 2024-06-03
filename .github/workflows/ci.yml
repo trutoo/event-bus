@@ -10,7 +10,7 @@ on:
       - renovate/*
   pull_request:
     branches:
-      - master
+      - main
 
 jobs:
   integration:
@@ -19,31 +19,31 @@ jobs:
 
     strategy:
       matrix:
-        node: [16.x, 17.x, 18.x]
+        node: [18.x, 20.x]
 
     steps:
-      - name: Check out source code
-        uses: actions/checkout@v2-beta
+      - name: ☁️ Check out source code
+        uses: actions/checkout@v4
 
-      - name: Set up Node.js version ${{ matrix.node }}
-        uses: actions/setup-node@v3
+      - name: ⚙️ Enable corepack
+        shell: bash
+        run: corepack enable
+
+      - name: ⚙️ Set up Node.js version ${{ matrix.node }}
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
-          registry-url: https://npm.pkg.github.com
-          scope: trutoo
 
-      - name: Install dependencies using CI
-        run: npm ci
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Used in .npmrc to install packages from github
+      - name: 📥 Install dependencies
+        uses: ./.github/actions/install
 
-      - name: Run tests on package
-        run: npm test
+      - name: 🧪 Run tests on package
+        run: yarn test
 
-      - name: Update coveralls
-        uses: coverallsapp/github-action@master
+      - name: 📝 Update coveralls
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build package
-        run: npm run build
+      - name: 📦 Build package
+        run: yarn build

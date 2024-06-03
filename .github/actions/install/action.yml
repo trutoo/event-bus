@@ -1,0 +1,98 @@
+# Reference https://gist.github.com/belgattitude/042f9caf10d029badbde6cf9d43e400a
+
+name: 'Install dependencies'
+description: 'Run yarn install with node_modules linker and cache enabled'
+inputs:
+  cwd:
+    description: "Changes node's process.cwd() if the project is not located on the root. Default to process.cwd()"
+    required: false
+    default: '.'
+  cache-npm-cache:
+    description: 'Cache npm global cache folder often used by node-gyp, prebuild binaries (invalidated on lock/os/node-version)'
+    required: false
+    default: 'true'
+  cache-node-modules:
+    description: 'Cache node_modules, might speed up link step (invalidated lock/os/node-version/branch)'
+    required: false
+    default: 'false'
+  cache-install-state:
+    description: 'Cache yarn install state, might speed up resolution step when node-modules cache is activated (invalidated lock/os/node-version/branch)'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: ⚙️ Expose yarn config as "$GITHUB_OUTPUT"
+      id: yarn-config
+      shell: bash
+      working-directory: ${{ inputs.cwd }}
+      env:
+        YARN_ENABLE_GLOBAL_CACHE: 'false'
+      run: |
+        CACHE_FOLDER=$(yarn config get cacheFolder) || { echo "Failed to get Yarn cache folder"; exit 1; }
+        echo "CACHE_FOLDER=$CACHE_FOLDER" >> $GITHUB_OUTPUT
+
+        CURRENT_NODE_VERSION="node-$(node --version)" || { echo "Failed to get Node version"; exit 1; }
+        echo "CURRENT_NODE_VERSION=$CURRENT_NODE_VERSION" >> $GITHUB_OUTPUT
+
+        CURRENT_BRANCH=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's,/,-,g') || { echo "Failed to get current branch"; exit 1; }
+        echo "CURRENT_BRANCH=$CURRENT_BRANCH" >> $GITHUB_OUTPUT
+
+        NPM_GLOBAL_CACHE_FOLDER=$(npm config get cache) || { echo "Failed to get NPM global cache folder"; exit 1; }
+        echo "NPM_GLOBAL_CACHE_FOLDER=$NPM_GLOBAL_CACHE_FOLDER" >> $GITHUB_OUTPUT
+
+    - name: ♻️ Show exposed yarn-config
+      shell: bash
+      run: |
+        echo "Cache folder: ${{ steps.yarn-config.outputs.CACHE_FOLDER }}"
+        echo "Current Node Version: ${{ steps.yarn-config.outputs.CURRENT_NODE_VERSION }}"
+        echo "Current Branch: ${{ steps.yarn-config.outputs.CURRENT_BRANCH }}"
+        echo "NPM Global Cache: ${{ steps.yarn-config.outputs.NPM_GLOBAL_CACHE_FOLDER }}"
+
+    - name: ♻️ Restore yarn cache
+      uses: actions/cache@v4
+      id: yarn-download-cache
+      with:
+        path: ${{ steps.yarn-config.outputs.CACHE_FOLDER }}
+        key: yarn-download-cache-${{ hashFiles(format('{0}/yarn.lock', inputs.cwd), format('{0}/.yarnrc.yml', inputs.cwd)) }}
+        restore-keys: |
+          yarn-download-cache-
+
+    - name: ♻️ Restore node_modules
+      if: inputs.cache-node-modules == 'true'
+      id: yarn-nm-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ inputs.cwd }}/**/node_modules
+        key: yarn-nm-cache-${{ runner.os }}-${{ steps.yarn-config.outputs.CURRENT_NODE_VERSION }}-${{ steps.yarn-config.outputs.CURRENT_BRANCH }}-${{ hashFiles(format('{0}/yarn.lock', inputs.cwd), format('{0}/.yarnrc.yml', inputs.cwd)) }}
+
+    - name: ♻️ Restore global npm cache folder
+      if: inputs.cache-npm-cache == 'true'
+      id: npm-global-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.yarn-config.outputs.NPM_GLOBAL_CACHE_FOLDER }}
+        key: npm-global-cache-${{ runner.os }}-${{ steps.yarn-config.outputs.CURRENT_NODE_VERSION }}-${{ hashFiles(format('{0}/yarn.lock', inputs.cwd), format('{0}/.yarnrc.yml', inputs.cwd)) }}
+
+    - name: ♻️ Restore yarn install state
+      if: inputs.cache-install-state == 'true' && inputs.cache-node-modules == 'true'
+      id: yarn-install-state-cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ inputs.cwd }}/.yarn/ci-cache
+        key: yarn-install-state-cache-${{ runner.os }}-${{ steps.yarn-config.outputs.CURRENT_NODE_VERSION }}-${{ steps.yarn-config.outputs.CURRENT_BRANCH }}-${{ hashFiles(format('{0}/yarn.lock', inputs.cwd), format('{0}/.yarnrc.yml', inputs.cwd)) }}
+
+    - name: 📥 Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.cwd }}
+      run: yarn install --immutable --inline-builds
+      env:
+        # Overrides/align yarnrc.yml options (v3, v4) for a CI context
+        YARN_ENABLE_GLOBAL_CACHE: 'false' # Use local cache folder to keep downloaded archives
+        YARN_ENABLE_MIRROR: 'false' # Prevent populating global cache for caches misses (local cache only)
+        YARN_NM_MODE: 'hardlinks-local' # Reduce node_modules size
+        # Might speed up resolution step when node_modules present
+        YARN_INSTALL_STATE_PATH: ${{ steps.yarn-install-state-cache.outputs.cache-hit == 'true' && '.yarn/ci-cache/install-state.gz' || '.yarn/install-state.gz' }}
+        # Other environment variables
+        HUSKY: '0' # By default do not run HUSKY install

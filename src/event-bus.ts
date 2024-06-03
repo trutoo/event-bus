@@ -14,7 +14,11 @@ export class PayloadMismatchError extends Error {
    * @param schema - registered schema on event channel
    * @param payload - payload detail sent
    */
-  constructor(public channel: string, public schema: any, public payload: any) {
+  constructor(
+    public channel: string,
+    public schema: any,
+    public payload: any,
+  ) {
     super(`payload does not match the specified schema for channel [${channel}].`);
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, PayloadMismatchError);
@@ -30,7 +34,11 @@ export class SchemaMismatchError extends Error {
    * @param schema - registered schema on event channel
    * @param newSchema - new schema attempting to be registered on event channel
    */
-  constructor(public channel: string, public schema: any, public newSchema: any) {
+  constructor(
+    public channel: string,
+    public schema: any,
+    public newSchema: any,
+  ) {
     super(`schema registration for [${channel}] must match already registered schema.`);
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, SchemaMismatchError);

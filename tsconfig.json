@@ -10,24 +10,11 @@
     "resolveJsonModule": true,
     "baseUrl": "./src",
     "outDir": "./dist",
-    "types": [],
-    "lib": [
-      "esnext",
-      "dom",
-      "dom.iterable",
-      "scripthost"
-    ],
+    "lib": ["esnext", "dom", "dom.iterable", "scripthost"],
     "paths": {
-      "*": [
-        "*"
-      ]
+      "*": ["*"]
     }
   },
-  "include": [
-    "src/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "src/**/*.spec.ts"
-  ]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "src/**/*.spec.ts"]
 }

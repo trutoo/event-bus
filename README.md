@@ -1,7 +1,7 @@
 # Event Bus
 
 ![Continuous Delivery](https://github.com/trutoo/event-bus/workflows/Continuous%20Delivery/badge.svg)
-[![Coverage Status](https://coveralls.io/repos/github/trutoo/event-bus/badge.svg?branch=master)](https://coveralls.io/github/trutoo/event-bus?branch=master) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/trutoo/event-bus) [![[npm downloads]](https://img.shields.io/npm/dt/@trutoo/event-bus)](https://www.npmjs.com/package/@trutoo/event-bus) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/@trutoo/event-bus/latest) ![License](https://img.shields.io/github/license/trutoo/event-bus?kill_cache=0)
+[![Coverage Status](https://coveralls.io/repos/github/trutoo/event-bus/badge.svg?branch=main)](https://coveralls.io/github/trutoo/event-bus?branch=main) ![GitHub release (latest by date)](https://img.shields.io/github/v/release/trutoo/event-bus) [![[npm downloads]](https://img.shields.io/npm/dt/@trutoo/event-bus)](https://www.npmjs.com/package/@trutoo/event-bus) ![npm bundle size](https://img.shields.io/bundlephobia/minzip/@trutoo/event-bus/latest) ![License](https://img.shields.io/github/license/trutoo/event-bus?kill_cache=0)
 
 Simple typesafe cross-platform pubsub communication between different single page applications, web components, fragments, or services. Purposefully built for a micro frontend architecture with a distributed responsibility for deployment. Allowing for framework agnostic and safe communication between different implementations and version. Catch those pesky event errors early :heart:.
 
@@ -9,17 +9,17 @@ Simple typesafe cross-platform pubsub communication between different single pag
 
 ## Table of Contents
 
-* [Purpose](#purpose)
-* [Installation](#installation)
-* [Usage](#usage)
-  + [Advanced Schema](#advanced-schema)
-* [API](#api)
-  + [Register](#register)
-  + [Unregister](#unregister)
-  + [Subscribe](#subscribe)
-  + [Publish](#publish)
-  + [Get Latest](#get-latest)
-  + [Get Schema](#get-schema)
+- [Purpose](#purpose)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Advanced Schema](#advanced-schema)
+- [API](#api)
+  - [Register](#register)
+  - [Unregister](#unregister)
+  - [Subscribe](#subscribe)
+  - [Publish](#publish)
+  - [Get Latest](#get-latest)
+  - [Get Schema](#get-schema)
 
 ---
 
@@ -35,23 +35,19 @@ This project was created to improve upon some of the deficits CustomEvents has i
 
 ## Installation
 
-Either add the Trutoo GitHub Package registry to your `.npmrc`
-
-```ini
-@trutoo:registry=https://npm.pkg.github.com/trutoo
-```
-
-or install using the registry flag
-
-```bash
-npm install @trutoo/event-bus --registry=https://npm.pkg.github.com/trutoo
-```
-
-or install from the [npm registry @trutoo/event-bus](https://www.npmjs.com/package/@trutoo/event-bus)
+Install the package from the [npm registry @trutoo/event-bus](https://www.npmjs.com/package/@trutoo/event-bus) as a production/runtime dependency.
 
 ```bash
 npm install @trutoo/event-bus
 ```
+
+or
+
+```bash
+yarn add @trutoo/event-bus
+```
+
+_**Note: dropped publishing to GitHub packages to simplify releases.**_
 
 Then either import the side effects only exposing a `eventBus` global instance.
 
@@ -88,7 +84,7 @@ or using the UMD module and instance.
 
 ## Usage
 
-Simple event bus registration with communication between a standard web component and a React component, as the event bus is framework agnostic. In addition a basic [JSON schema draft-04](https://tools.ietf.org/html/draft-zyp-json-schema-04) is used to restrict communication to a single boolean. Below outlines the basic usage, but can be can also be seen under [`/docs`](https://github.com/trutoo/event-bus/tree/master/docs) folder.
+Simple event bus registration with communication between a standard web component and a React component, as the event bus is framework agnostic. In addition a basic [JSON schema draft-04](https://tools.ietf.org/html/draft-zyp-json-schema-04) is used to restrict communication to a single boolean. Below outlines the basic usage, but can also be seen under [`/docs`](https://github.com/trutoo/event-bus/tree/main/docs) folder.
 
 `JSON Schema`
 
@@ -147,14 +143,11 @@ function SubscriberComponent() {
 Following is an example of a more a more complex use-case with a larger [JSON schema draft-04](https://tools.ietf.org/html/draft-zyp-json-schema-04) and registration on multiple channels.
 
 `JSON Schema`
+
 ```json
 {
   "type": "object",
-  "required": [
-    "name",
-    "amount",
-    "price"
-  ],
+  "required": ["name", "amount", "price"],
   "properties": {
     "name": {
       "type": "string"
@@ -221,14 +214,14 @@ export class StoreComponent implements OnInit, OnDestroy {
       stores: [
         {
           name: 'ACME Food AB',
-          url: 'acme-food.com'
-        }
-      ]
+          url: 'acme-food.com',
+        },
+      ],
     });
   }
 
   ngOnDestroy() {
-    this.subs.forEach(sub => sub.unsubscribe());
+    this.subs.forEach((sub) => sub.unsubscribe());
   }
 }
 ```
@@ -245,10 +238,10 @@ register(channel: string, schema: object): boolean;
 
 #### Parameters
 
-| Name      | Type     | Description                                          |
-| --------- | -------- | ---------------------------------------------------- |
+| Name    | Type     | Description                                          |
+| ------- | -------- | ---------------------------------------------------- |
 | channel | `string` | name of event channel to register schema to          |
-| schema    | `object` | all communication on channel must follow this schema |
+| schema  | `object` | all communication on channel must follow this schema |
 
 **Returns** - returns true if event channel already existed of false if a new one was created.
 
@@ -264,8 +257,8 @@ unregister(channel: string): boolean;
 
 #### Parameters
 
-| Name      | Type     | Description                                     |
-| --------- | -------- | ----------------------------------------------- |
+| Name    | Type     | Description                                     |
+| ------- | -------- | ----------------------------------------------- |
 | channel | `string` | name of event channel to unregister schema from |
 
 **Returns** - returns true if event channel existed and an existing schema was removed.
@@ -285,7 +278,8 @@ subscribe<T>(channel: string, replay: boolean, callback: Callback<T>): { unsubsc
 ```
 
 Callbacks will be fired when event is published on a subscribed channel with the argument:
-``` typescript
+
+```typescript
 {
   channel: string,
   payload: T,
@@ -294,11 +288,11 @@ Callbacks will be fired when event is published on a subscribed channel with the
 
 #### Parameters
 
-| Name      | Type            | Description                                                     |
-| --------- | --------------- | --------------------------------------------------------------- |
-| channel | `string`        | name of event channel to receive data from                      |
-| replay    | `boolean=false` | flag indicating if initial description should return last event |
-| callback  | `function`      | function executed on when event channel receives new data       |
+| Name     | Type            | Description                                                     |
+| -------- | --------------- | --------------------------------------------------------------- |
+| channel  | `string`        | name of event channel to receive data from                      |
+| replay   | `boolean=false` | flag indicating if initial description should return last event |
+| callback | `function`      | function executed on when event channel receives new data       |
 
 **Returns** - object containing an unsubscribe method
 
@@ -314,10 +308,10 @@ publish<T>(channel: string, payload?: T): void;
 
 #### Parameters
 
-| Name      | Type     | Description                              |
-| --------- | -------- | ---------------------------------------- |
+| Name    | Type     | Description                              |
+| ------- | -------- | ---------------------------------------- |
 | channel | `string` | name of event channel to send payload on |
-| payload    | `any`    | payload to be sent                       |
+| payload | `any`    | payload to be sent                       |
 
 **Returns** - void
 
@@ -333,8 +327,8 @@ getLatest<T>(channel: string): T | undefined;
 
 #### Parameters
 
-| Name      | Type     | Description                              |
-| --------- | -------- | ---------------------------------------- |
+| Name    | Type     | Description                                                |
+| ------- | -------- | ---------------------------------------------------------- |
 | channel | `string` | name of the event channel to fetch the latest payload from |
 
 **Returns** - the latest payload or `undefined`
@@ -351,8 +345,8 @@ getSchema<T>(channel: string): any | undefined;
 
 #### Parameters
 
-| Name      | Type     | Description                              |
-| --------- | -------- | ---------------------------------------- |
+| Name    | Type     | Description                                        |
+| ------- | -------- | -------------------------------------------------- |
 | channel | `string` | name of the event channel to fetch the schema from |
 
 **Returns** - the schema or `undefined`
