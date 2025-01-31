@@ -26,8 +26,17 @@ describe('[PayloadMismatchError]', () => {
 
   it('should not call captureStackTrace if it is not defined', () => {
     (Error as any).captureStackTrace = undefined;
-    new PayloadMismatchError('channel', null, null);
+    const emptySchema = { type: 'null' };
+    new PayloadMismatchError('channel', emptySchema, null);
     expect(Error.captureStackTrace).toBeFalsy();
+  });
+
+  it('should handle undefined or null values in error message', () => {
+    const schema = undefined;
+    const payload = null;
+    const error = new PayloadMismatchError('channel', schema as any, payload);
+    expect(error.message).toContain('undefined');
+    expect(error.message).toContain('null');
   });
 });
 
@@ -56,7 +65,8 @@ describe('[SchemaMismatchError]', () => {
 
   it('should not call captureStackTrace if it is not defined', () => {
     (Error as any).captureStackTrace = undefined;
-    new SchemaMismatchError('channel', null, null);
+    const emptySchema = { type: 'null' };
+    new SchemaMismatchError('channel', emptySchema, emptySchema);
     expect(Error.captureStackTrace).toBeFalsy();
   });
 });
@@ -88,7 +98,7 @@ describe('[EventBus]: register', () => {
       eventBus.register('test1', { type: 'boolean' });
       eventBus.register('test1', { type: 'string' });
     };
-    expect(register).toThrowError();
+    expect(register).toThrow();
   });
 });
 
@@ -112,36 +122,33 @@ describe('[EventBus]: unregister', () => {
 //------------------------------------------------------------------------------------
 
 describe('[EventBus]: subscribe', () => {
-  it('should subscribe to a new channel', () => {
+  it('should subscribe to a new channel', async () => {
     const eventBus = new EventBus();
-    eventBus.subscribe('test1', jest.fn());
+    await eventBus.subscribe('test1', jest.fn());
   });
 
-  it('should throw an error if subscribe is called without a callback', () => {
+  it('should throw an error if subscribe is called without a callback', async () => {
     const eventBus = new EventBus();
-    const subscribe = () => {
-      eventBus.subscribe('test1', undefined as any);
-    };
-    expect(subscribe).toThrowError();
+    await expect(eventBus.subscribe('test1', undefined as any)).rejects.toThrow();
   });
 
-  it('should not trigger a callback with replay if no previous event was published', () => {
+  it('should not trigger a callback with replay if no previous event was published', async () => {
     const eventBus = new EventBus();
     const callback = jest.fn();
-    eventBus.subscribe('test1', true, callback);
+    await eventBus.subscribe('test1', true, callback);
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it('should not trigger a callback if no replay is requested', () => {
+  it('should not trigger a callback if no replay is requested', async () => {
     const eventBus = new EventBus();
     const callback = jest.fn();
-    eventBus.subscribe('test1', false, callback);
+    await eventBus.subscribe('test1', false, callback);
     expect(callback).not.toHaveBeenCalled();
   });
 
-  it('should unsubscribe to an existing channel', () => {
+  it('should unsubscribe to an existing channel', async () => {
     const eventBus = new EventBus();
-    const subscription = eventBus.subscribe('test1', jest.fn());
+    const subscription = await eventBus.subscribe('test1', jest.fn());
     subscription.unsubscribe();
   });
 });
@@ -151,34 +158,73 @@ describe('[EventBus]: subscribe', () => {
 //------------------------------------------------------------------------------------
 
 describe('[EventBus]: publish', () => {
-  it('should publish event to a new channel', () => {
+  it('should publish event to a new channel', async () => {
     const eventBus = new EventBus();
-    eventBus.publish('test1', true);
+    await eventBus.publish('test1', true);
   });
 
-  it('should publish event to a registered channel matching schema', () => {
+  it('should publish event to a registered channel matching schema', async () => {
     const eventBus = new EventBus();
     eventBus.register('test1', { type: 'boolean' });
-    eventBus.publish('test1', true);
+    await eventBus.publish('test1', true);
   });
 
-  it('should fail to publish incorrect event to a registered channel with schema', () => {
+  it('should fail to publish incorrect event to a registered channel with schema', async () => {
     const eventBus = new EventBus();
-    const publish = () => {
+    const publish = async () => {
       eventBus.register('test1', { type: 'boolean' });
-      eventBus.publish('test1', 'hello');
+      await eventBus.publish('test1', 'hello');
     };
-    expect(publish).toThrowError();
+    await expect(publish()).rejects.toThrow();
   });
 
-  it("should skip calling registered callbacks that aren't functions in channel", () => {
+  it("should skip calling registered callbacks that aren't functions in channel", async () => {
+    const eventBus = new EventBus({ logLevel: 'none' });
+    const callback = jest.fn();
+    // Mutate subscriptions to include invalid types
+    const invalidCallbacks = {
+      invalid1: null,
+      invalid2: undefined,
+      invalid3: 1,
+      invalid4: 'hello',
+      valid: callback,
+    };
+    (eventBus as any)._subscriptions.set('test1', { callbacks: invalidCallbacks });
+    (eventBus as any)._subscriptions.set('*', { callbacks: invalidCallbacks });
+
+    await eventBus.publish('test1', true);
+    expect(callback).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('[EventBus]: subscription structure', () => {
+  it('should maintain separate schema, replay and callbacks in channel subscription', () => {
     const eventBus = new EventBus();
     const callback = jest.fn();
-    // Mutate function to include invalid types
-    eventBus['_subscriptions'].test1 = [null, undefined, 1, 'hello', true, false, {}, [], callback] as any;
-    eventBus['_subscriptions']['*'] = [null, undefined, 1, 'hello', true, false, {}, [], callback] as any;
-    eventBus.publish('test1', true);
-    expect(callback).toHaveBeenCalledTimes(2);
+    const schema = { type: 'boolean' };
+    const payload = true;
+
+    eventBus.register('test1', schema);
+    eventBus.subscribe('test1', callback);
+    eventBus.publish('test1', payload);
+
+    const sub = (eventBus as any)._subscriptions.get('test1');
+    expect(sub.schema).toEqual(schema);
+    expect(sub.replay).toBe(payload);
+    expect(typeof Object.values(sub.callbacks)[0]).toBe('function');
+  });
+
+  it('should properly clean up subscription on unsubscribe', async () => {
+    const eventBus = new EventBus();
+    const callback = jest.fn();
+    const subscription = await eventBus.subscribe('test1', callback);
+
+    const sub = (eventBus as any)._subscriptions.get('test1');
+    const callbackId = Object.keys(sub.callbacks)[0];
+    expect(sub.callbacks[callbackId]).toBe(callback);
+
+    subscription.unsubscribe();
+    expect(sub.callbacks[callbackId]).toBeUndefined();
   });
 });
 
@@ -187,9 +233,9 @@ describe('[EventBus]: publish', () => {
 //------------------------------------------------------------------------------------
 
 describe('[EventBus]: getLatest', () => {
-  it('should return the latest published event on channel', () => {
+  it('should return the latest published event on channel', async () => {
     const eventBus = new EventBus();
-    eventBus.publish('test1', true);
+    await eventBus.publish('test1', true);
     expect(eventBus.getLatest('test1')).toBe(true);
     expect(eventBus.getLatest('test2')).toBeUndefined();
   });
@@ -213,26 +259,26 @@ describe('[EventBus]: getSchema', () => {
 //------------------------------------------------------------------------------------
 
 describe('[EventBus]: subscribe and publish', () => {
-  it('should receive same data as published', () => {
+  it('should receive same data as published', async () => {
     const eventBus = new EventBus();
     const payload = { test1: true };
     const callback = jest.fn();
-    eventBus.subscribe('test1', callback);
+    await eventBus.subscribe('test1', callback);
     expect(callback).not.toHaveBeenCalled();
-    eventBus.publish('test1', payload);
-    expect(callback).toBeCalledWith({ channel: 'test1', payload });
+    await eventBus.publish('test1', payload);
+    expect(callback).toHaveBeenCalledWith({ channel: 'test1', payload });
   });
 
-  it('should receive events on wildcard channel * regardless of channel it was published on', () => {
+  it('should receive events on wildcard channel * regardless of channel it was published on', async () => {
     const eventBus = new EventBus();
     const payload = { test1: true };
     const callback = jest.fn();
-    eventBus.subscribe('*', callback);
-    eventBus.publish('test1', payload);
-    expect(callback).toBeCalledWith({ channel: 'test1', payload: payload });
+    await eventBus.subscribe('*', callback);
+    await eventBus.publish('test1', payload);
+    expect(callback).toHaveBeenCalledWith({ channel: '*', payload: payload });
   });
 
-  it('should handle more advanced schemas', () => {
+  it('should handle more advanced schemas', async () => {
     const eventBus = new EventBus();
     const payload = {
       name: 'Milk',
@@ -248,42 +294,206 @@ describe('[EventBus]: subscribe and publish', () => {
     };
     const callback = jest.fn();
     eventBus.register('test1', AdvancedSchema);
-    eventBus.subscribe('test1', callback);
-    eventBus.publish('test1', payload);
-    expect(callback).toBeCalledWith({ channel: 'test1', payload });
+    await eventBus.subscribe('test1', callback);
+    await eventBus.publish('test1', payload);
+    expect(callback).toHaveBeenCalledWith({ channel: 'test1', payload });
   });
 
-  it('should subscribe to an existing channel with replay of last event', () => {
+  it('should subscribe to an existing channel with replay of last event', async () => {
     const eventBus = new EventBus();
     const payload = { test1: true };
     const callback = jest.fn();
-    eventBus.publish('test1', payload);
-    eventBus.subscribe('test1', true, callback);
-    expect(callback).toBeCalledWith({ channel: 'test1', payload });
+    await eventBus.publish('test1', payload);
+    await eventBus.subscribe('test1', true, callback);
+    expect(callback).toHaveBeenCalledWith({ channel: 'test1', payload });
   });
 
-  it('should handle multiple subscriptions with correct channels', () => {
+  it('should handle multiple subscriptions with correct channels', async () => {
     const eventBus = new EventBus();
     const callback1 = jest.fn();
     const callback2 = jest.fn();
     const callback3 = jest.fn();
-    eventBus.subscribe('test1', callback1);
-    eventBus.subscribe('test1', callback2);
-    eventBus.subscribe('test2', callback3);
-    eventBus.publish('test1', { test1: true });
+    await eventBus.subscribe('test1', callback1);
+    await eventBus.subscribe('test1', callback2);
+    await eventBus.subscribe('test2', callback3);
+    await eventBus.publish('test1', { test1: true });
     expect(callback1).toHaveBeenCalled();
     expect(callback2).toHaveBeenCalled();
     expect(callback3).not.toHaveBeenCalled();
   });
 
-  it('should no longer receive data after unsubscribe', () => {
+  it('should no longer receive data after unsubscribe', async () => {
     const eventBus = new EventBus();
     const callback = jest.fn();
-    const subscription = eventBus.subscribe('test1', callback);
-    eventBus.publish('test1', { test1: true });
+    const subscription = await eventBus.subscribe('test1', callback);
+    await eventBus.publish('test1', { test1: true });
     expect(callback).toHaveBeenCalled();
     subscription.unsubscribe();
-    eventBus.publish('test1', { test1: true });
+    await eventBus.publish('test1', { test1: true });
     expect(callback).toHaveBeenCalledTimes(1);
+  });
+});
+
+//------------------------------------------------------------------------------------
+// logging
+//------------------------------------------------------------------------------------
+
+describe('[EventBus]: logging', () => {
+  const originalConsole = { ...console };
+
+  beforeEach(() => {
+    console.info = jest.fn();
+    console.warn = jest.fn();
+    console.error = jest.fn();
+  });
+
+  afterEach(() => {
+    Object.assign(console, originalConsole);
+  });
+
+  it('should not log anything when log level is none', () => {
+    const eventBus = new EventBus({ logLevel: 'none' });
+    (eventBus as any)._log('test message', 'info');
+    (eventBus as any)._log('test message', 'warn');
+    (eventBus as any)._log('test message', 'error');
+    expect(console.info).not.toHaveBeenCalled();
+    expect(console.warn).not.toHaveBeenCalled();
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it('should only log errors when log level is error', () => {
+    const eventBus = new EventBus({ logLevel: 'error' });
+    (eventBus as any)._log('test message', 'info');
+    (eventBus as any)._log('test message', 'warn');
+    (eventBus as any)._log('test message', 'error');
+    expect(console.info).not.toHaveBeenCalled();
+    expect(console.warn).not.toHaveBeenCalled();
+    expect(console.error).toHaveBeenCalledWith('[EventBus] test message');
+  });
+
+  it('should log warnings and errors when log level is warn', () => {
+    const eventBus = new EventBus({ logLevel: 'warn' });
+    (eventBus as any)._log('test message', 'info');
+    (eventBus as any)._log('test message', 'warn');
+    (eventBus as any)._log('test message', 'error');
+    expect(console.info).not.toHaveBeenCalled();
+    expect(console.warn).toHaveBeenCalledWith('[EventBus] test message');
+    expect(console.error).toHaveBeenCalledWith('[EventBus] test message');
+  });
+
+  it('should log all messages when log level is info', () => {
+    const eventBus = new EventBus({ logLevel: 'info' });
+    (eventBus as any)._log('test message', 'info');
+    (eventBus as any)._log('test message', 'warn');
+    (eventBus as any)._log('test message', 'error');
+    expect(console.info).toHaveBeenCalledWith('[EventBus] test message');
+    expect(console.warn).toHaveBeenCalledWith('[EventBus] test message');
+    expect(console.error).toHaveBeenCalledWith('[EventBus] test message');
+  });
+
+  it('should default to info level if no level is provided', () => {
+    const eventBus = new EventBus({ logLevel: 'info' });
+    (eventBus as any)._log('test message');
+    expect(console.info).toHaveBeenCalledWith('[EventBus] test message');
+  });
+});
+
+//------------------------------------------------------------------------------------
+// clearReplay
+//------------------------------------------------------------------------------------
+
+describe('[EventBus]: clearReplay', () => {
+  it('should clear replay data for existing channel', async () => {
+    const eventBus = new EventBus();
+    await eventBus.publish('test', true);
+    expect(eventBus.getLatest('test')).toBe(true);
+
+    const cleared = eventBus.clearReplay('test');
+    expect(cleared).toBe(true);
+    expect(eventBus.getLatest('test')).toBeUndefined();
+  });
+
+  it('should return false when clearing non-existent channel', () => {
+    const eventBus = new EventBus();
+    const cleared = eventBus.clearReplay('nonexistent');
+    expect(cleared).toBe(false);
+  });
+
+  it('should return false when clearing channel with no replay data', async () => {
+    const eventBus = new EventBus();
+    await eventBus.subscribe('test', () => {});
+    const cleared = eventBus.clearReplay('test');
+    expect(cleared).toBe(false);
+  });
+});
+
+//------------------------------------------------------------------------------------
+// callback error handling
+//------------------------------------------------------------------------------------
+
+describe('[EventBus]: callback error handling', () => {
+  const originalConsole = { ...console };
+
+  beforeEach(() => {
+    console.error = jest.fn();
+  });
+
+  afterEach(() => {
+    Object.assign(console, originalConsole);
+  });
+
+  it('should handle Error instances in callbacks', async () => {
+    const eventBus = new EventBus();
+    const errorMessage = 'Test error message';
+    const callback = () => {
+      throw new Error(errorMessage);
+    };
+
+    await eventBus.subscribe('test', callback);
+    await eventBus.publish('test', true);
+
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining(errorMessage));
+  });
+
+  it('should handle non-Error objects in callbacks', async () => {
+    const eventBus = new EventBus();
+    const errorObj = { custom: 'error' };
+    const callback = () => {
+      throw errorObj;
+    };
+
+    await eventBus.subscribe('test', callback);
+    await eventBus.publish('test', true);
+
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining(String(errorObj)));
+  });
+
+  it('should continue execution when one callback fails among multiple subscribers', async () => {
+    const eventBus = new EventBus();
+    const errorMessage = 'Test error message';
+    const failingCallback = jest.fn().mockImplementation(() => {
+      throw new Error(errorMessage);
+    });
+    const successCallback1 = jest.fn();
+    const successCallback2 = jest.fn();
+
+    await eventBus.subscribe('test', successCallback1);
+    await eventBus.subscribe('test', failingCallback);
+    await eventBus.subscribe('test', successCallback2);
+
+    const payload = { data: 'test' };
+    await eventBus.publish('test', payload);
+
+    // Verify error was logged
+    expect(console.error).toHaveBeenCalledWith(expect.stringContaining(errorMessage));
+
+    // Verify all callbacks were attempted
+    expect(successCallback1).toHaveBeenCalledWith(expect.objectContaining({ payload }));
+    expect(failingCallback).toHaveBeenCalledWith(expect.objectContaining({ payload }));
+    expect(successCallback2).toHaveBeenCalledWith(expect.objectContaining({ payload }));
+
+    // Verify successful callbacks completed
+    expect(successCallback1).toHaveBeenCalledTimes(1);
+    expect(successCallback2).toHaveBeenCalledTimes(1);
   });
 });

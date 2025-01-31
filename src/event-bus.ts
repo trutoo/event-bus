@@ -1,11 +1,33 @@
 import { validate } from 'jsonschema';
 import { deepCompareStrict } from 'jsonschema/lib/helpers';
 
+export type Schema = Record<string, unknown>;
+export type Payload = any;
+
 export type ChannelEvent<T> = { channel: string; payload: T | undefined };
 
 export type Callback<T> = (event: ChannelEvent<T>) => void;
 
 export type Subscription = { unsubscribe(): void };
+
+export type LogLevel = 'none' | 'error' | 'warn' | 'info';
+
+type ChannelSubscription = {
+  schema?: Schema;
+  replay?: Payload;
+  callbacks: Record<string, Callback<any>>;
+};
+
+export interface EventBusOptions {
+  /**
+   * The logging level for the event bus
+   * - 'none': No logging
+   * - 'error': Only log errors
+   * - 'warn': Log warnings and errors
+   * - 'info': Log everything (default)
+   */
+  logLevel?: LogLevel;
+}
 
 export class PayloadMismatchError extends Error {
   /**
@@ -16,10 +38,11 @@ export class PayloadMismatchError extends Error {
    */
   constructor(
     public channel: string,
-    public schema: any,
-    public payload: any,
+    public schema: Schema,
+    public payload: Payload,
   ) {
-    super(`payload does not match the specified schema for channel [${channel}].`);
+    super(`Payload does not match the specified schema for channel [${channel}]. 
+           Schema: ${JSON.stringify(schema)}, Payload: ${JSON.stringify(payload)}`);
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, PayloadMismatchError);
     }
@@ -36,25 +59,80 @@ export class SchemaMismatchError extends Error {
    */
   constructor(
     public channel: string,
-    public schema: any,
-    public newSchema: any,
+    public schema: Schema,
+    public newSchema: Schema,
   ) {
-    super(`schema registration for [${channel}] must match already registered schema.`);
+    super(`Schema registration for [${channel}] must match already registered schema.`);
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, SchemaMismatchError);
     }
     this.name = 'SchemaMismatchError';
   }
 }
-
 export class EventBus {
   private _lastId = 0;
-  private _subscriptions: {
-    [channel: string]: { __replay?: any; __schema?: any; [id: string]: (payload: any) => void };
-  } = {};
+  private _subscriptions = new Map<string, ChannelSubscription>();
+  private readonly _options: Required<EventBusOptions>;
 
+  constructor(options: EventBusOptions = {}) {
+    this._options = {
+      logLevel: 'error',
+      ...options,
+    };
+  }
+
+  /**
+   * Generates and returns the next available sequential identifier.
+   * Increments the internal counter after returning the current value.
+   * @returns The next sequential identifier
+   */
   private _getNextId() {
     return this._lastId++;
+  }
+
+  /**
+   * Logs messages for debugging and monitoring.
+   * @param message - The message to log.
+   * @param level - The log level (info, warn, error).
+   */
+  private _log(message: string, level: Exclude<LogLevel, 'none'> = 'info') {
+    const logLevels: Record<LogLevel, number> = {
+      none: 0,
+      error: 1,
+      warn: 2,
+      info: 3,
+    };
+
+    if (logLevels[this._options.logLevel] >= logLevels[level]) {
+      console[level](`[EventBus] ${message}`);
+    }
+  }
+
+  /**
+   * Safely executes a callback asynchronously with error handling.
+   * @param callback - The callback to execute.
+   * @param event - The event to pass to the callback.
+   */
+  private async _asyncCallback<T>(callback: Callback<T>, event: ChannelEvent<T>): Promise<void> {
+    try {
+      await callback(event);
+    } catch (error) {
+      this._log(`Error in callback execution: ${error instanceof Error ? error.message : String(error)}`, 'error');
+    }
+  }
+
+  /**
+   * Gets an existing channel subscription or creates a new one if it doesn't exist.
+   * @param channel - The channel identifier to get or create a subscription for
+   * @returns The channel subscription object containing registered callbacks
+   */
+  private _getOrCreateChannel(channel: string): ChannelSubscription {
+    let sub = this._subscriptions.get(channel);
+    if (!sub) {
+      sub = { callbacks: {} };
+      this._subscriptions.set(channel, sub);
+    }
+    return sub;
   }
 
   /**
@@ -64,20 +142,18 @@ export class EventBus {
    * @param schema - all communication on channel must follow this schema
    * @returns returns true if event channel already existed of false if a new one was created
    *
-   * @throws {@link SchemaMismatchError}
+   * @throws {SchemaMismatchError}
    * This exception is thrown if new schema does not match already registered schema.
    */
-  register(channel: string, schema: object) {
-    let exists = true;
-    if (!this._subscriptions[channel]) {
-      exists = false;
-      this._subscriptions[channel] = {};
+  register(channel: string, schema: Schema): boolean {
+    this._log(`Registering schema for channel [${channel}]`);
+    const sub = this._getOrCreateChannel(channel);
+    const exists = !!sub.schema;
+
+    if (exists && !deepCompareStrict(sub.schema!, schema)) {
+      throw new SchemaMismatchError(channel, sub.schema!, schema);
     }
-    const registered = this._subscriptions[channel].__schema;
-    if (registered && !deepCompareStrict(registered, schema)) {
-      throw new SchemaMismatchError(channel, registered, schema);
-    }
-    this._subscriptions[channel].__schema = schema;
+    sub.schema = schema;
     return exists;
   }
 
@@ -86,84 +162,89 @@ export class EventBus {
    * @param channel - name of event channel to unregister schema from
    * @returns returns true if event channel existed and an existing schema was removed
    */
-  unregister(channel: string) {
-    const subscriptions = this._subscriptions[channel];
-    let exists = false;
-    if (subscriptions && subscriptions.__schema) {
-      exists = true;
-      delete subscriptions.__schema;
+  unregister(channel: string): boolean {
+    const sub = this._subscriptions.get(channel);
+    if (sub?.schema) {
+      delete sub.schema;
+      this._log(`Unregistered schema for channel [${channel}]`);
+      return true;
     }
-    return exists;
+    return false;
   }
 
   /**
    * Subscribe to an event channel triggering callback on received event matching type.
    * @param channel - name of event channel to receive data from
    * @param callback - function executed on when event channel receives new data
-   * @returns object containing an unsubscribe method
+   * @returns object containing an unsubscribe method and initial subscription promise
    */
-  subscribe<T>(channel: string, callback: Callback<T>): Subscription;
+  async subscribe<T>(channel: string, callback: Callback<T>): Promise<Subscription>;
   /**
    * Subscribe to an event channel triggering callback on received event matching type,
    * with an optional replay of last event at initial subscription.
    * @param channel - name of event channel to receive data from
    * @param replay - flag indicating if initial description should return last event
    * @param callback - function executed on when event channel receives new data
-   * @returns object containing an unsubscribe method
+   * @returns object containing an unsubscribe method and initial subscription promise
    */
-  subscribe<T>(channel: string, replay: boolean, callback: Callback<T>): Subscription;
-  subscribe<T>(channel: string, param2: boolean | Callback<T>, param3?: Callback<T>): Subscription {
-    const id = this._getNextId();
+  async subscribe<T>(channel: string, replay: boolean, callback: Callback<T>): Promise<Subscription>;
+
+  async subscribe<T>(channel: string, param2: boolean | Callback<T>, param3?: Callback<T>): Promise<Subscription> {
+    const id = this._getNextId().toString();
     const replay = typeof param2 === 'boolean' ? param2 : false;
     const callback = typeof param2 === 'function' ? param2 : param3;
 
-    if (typeof callback !== 'function')
+    if (typeof callback !== 'function') {
       throw new Error('Callback function must be supplied as either the second or third argument.');
+    }
 
-    let channelObject = this._subscriptions[channel];
-    if (!channelObject) channelObject = this._subscriptions[channel] = {};
-    else if (replay) callback({ channel, payload: channelObject.__replay });
+    const sub = this._getOrCreateChannel(channel);
+    if (replay && sub.replay !== undefined) {
+      await this._asyncCallback(callback, {
+        channel,
+        payload: sub.replay,
+      });
+    }
 
-    channelObject[id] = callback;
+    sub.callbacks[id] = callback;
     return {
-      unsubscribe: () => delete channelObject[id],
+      unsubscribe: () => {
+        delete sub.callbacks[id];
+        this._log(`Unsubscribed from channel [${channel}]`);
+      },
     };
   }
 
   /**
-   * Publish to event channel with an optional payload triggering all subscription callbacks.
-   * @param channel - name of event channel to send payload on
-   * @param payload - payload to be sent
-   *
-   * @throws {@link PayloadMismatchError}
-   * This exception is thrown if payload does is not valid against registered schema.
+   * Helper method to publish an event to a specific channel.
+   * @param channel - The channel to publish to.
+   * @param payload - The payload to send.
    */
-  publish<T>(channel: string, payload?: T) {
-    let channelObject = this._subscriptions[channel];
-    if (!channelObject) channelObject = this._subscriptions[channel] = {};
-    const schema = channelObject.__schema;
-    if (typeof payload !== 'undefined' && schema && !validate(payload, schema).valid) {
-      throw new PayloadMismatchError(channel, schema, payload);
-    }
-    channelObject.__replay = payload;
+  private async _publishToChannel<T>(channel: string, payload?: T): Promise<void> {
+    const sub = this._subscriptions.get(channel);
+    if (!sub) return;
 
-    for (const id in channelObject) {
-      // istanbul ignore if - ignore robustness check
-      if (id === '__replay' || id === '__schema') continue;
-      if (typeof channelObject[id] !== 'function') continue;
-      channelObject[id]({ channel, payload });
-    }
+    const event: ChannelEvent<T> = { channel, payload };
+    await Promise.all(Object.values(sub.callbacks).map((callback) => this._asyncCallback(callback, event)));
+  }
 
-    // Publish all events on the wildcard channel
-    channelObject = this._subscriptions['*'];
-    if (channelObject) {
-      for (const id in channelObject) {
-        // istanbul ignore if - ignore robustness check
-        if (id === '__replay' || id === '__schema') continue;
-        if (typeof channelObject[id] !== 'function') continue;
-        channelObject[id]({ channel, payload });
-      }
+  /**
+   * Publishes a payload to the specified channel and triggers all subscription callbacks.
+   * If a schema is registered for the channel, the payload will be validated against it.
+   * @param channel - The name of the event channel to send the payload on.
+   * @param payload - The payload to be sent.
+   * @returns Promise that resolves when all callbacks have completed
+   * @throws {PayloadMismatchError} If the payload does not match the registered schema.
+   */
+  async publish<T>(channel: string, payload?: T): Promise<void> {
+    const sub = this._getOrCreateChannel(channel);
+
+    if (typeof payload !== 'undefined' && sub.schema && !validate(payload, sub.schema).valid) {
+      throw new PayloadMismatchError(channel, sub.schema, payload);
     }
+    sub.replay = payload;
+
+    await Promise.all([this._publishToChannel(channel, payload), this._publishToChannel('*', payload)]);
   }
 
   /**
@@ -172,7 +253,7 @@ export class EventBus {
    * @returns the latest payload or `undefined`
    */
   getLatest<T>(channel: string): T | undefined {
-    if (this._subscriptions[channel]) return this._subscriptions[channel].__replay;
+    return this._subscriptions.get(channel)?.replay;
   }
 
   /**
@@ -180,7 +261,22 @@ export class EventBus {
    * @param channel - name of the event channel to fetch the schema from
    * @returns the schema or `undefined`
    */
-  getSchema(channel: string): any | undefined {
-    if (this._subscriptions[channel]) return this._subscriptions[channel].__schema;
+  getSchema(channel: string): Schema | undefined {
+    return this._subscriptions.get(channel)?.schema;
+  }
+
+  /**
+   * Clears the replay event for the specified channel.
+   * @param channel - The name of the event channel to clear the replay event from.
+   * @returns Returns true if the replay event was cleared, false otherwise.
+   */
+  clearReplay(channel: string): boolean {
+    const sub = this._subscriptions.get(channel);
+    if (sub?.replay !== undefined) {
+      delete sub.replay;
+      this._log(`Cleared replay event for channel [${channel}]`);
+      return true;
+    }
+    return false;
   }
 }
