@@ -1,14 +1,18 @@
-import { readFileSync } from 'fs';
-
 import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
+import { readFileSync } from 'node:fs';
 import nodePolyfills from 'rollup-plugin-node-polyfills';
 
-const pkg = JSON.parse(readFileSync('./package.json'));
+const pkg = JSON.parse(readFileSync('./package.json', 'utf-8'));
 
-const startsWithRegExp = (str) => RegExp(`^${str}`);
+const createRegExp = (str) => new RegExp(`^${str}`);
+const external = [
+  ...Object.keys(pkg.dependencies || {}).map(createRegExp),
+  ...Object.keys(pkg.peerDependencies || {}).map(createRegExp),
+];
 
 export default [
   {
@@ -16,29 +20,42 @@ export default [
     output: [
       {
         name: 'EventBus',
-        file: pkg.browser,
+        file: 'dist/index.umd.min.js',
         format: 'umd',
-        plugins: [terser()],
         sourcemap: true,
+        plugins: [terser()],
       },
       {
         name: 'EventBus',
-        file: `${pkg.browser.replace(/\.min\.js$/, '.js')}`,
+        file: 'dist/index.umd.js',
         format: 'umd',
       },
     ],
-    plugins: [commonjs(), nodePolyfills(), nodeResolve({ browser: true, preferBuiltins: false }), typescript()],
+    plugins: [
+      commonjs(),
+      nodePolyfills(),
+      nodeResolve({
+        browser: true,
+        preferBuiltins: false,
+      }),
+      json(),
+      typescript(),
+    ],
   },
   {
     input: 'src/index.ts',
-    external: [
-      ...Object.keys(pkg.dependencies || {}).map(startsWithRegExp),
-      ...Object.keys(pkg.peerDependencies || {}).map(startsWithRegExp),
+    external,
+    output: [
+      {
+        file: pkg.main,
+        format: 'cjs',
+        exports: 'named',
+      },
+      {
+        file: pkg.module,
+        format: 'es',
+      },
     ],
     plugins: [commonjs(), typescript()],
-    output: [
-      { file: pkg.main, format: 'cjs' },
-      { file: pkg.module, format: 'es' },
-    ],
   },
 ];

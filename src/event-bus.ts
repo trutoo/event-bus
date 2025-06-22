@@ -1,5 +1,5 @@
-import { validate } from 'jsonschema';
-import { deepCompareStrict } from 'jsonschema/lib/helpers';
+import { strictDeepEqual } from 'fast-equals';
+import { Validator } from 'jsonschema';
 
 export type Schema = Record<string, unknown>;
 export type Payload = any;
@@ -73,12 +73,14 @@ export class EventBus {
   private _lastId = 0;
   private _subscriptions = new Map<string, ChannelSubscription>();
   private readonly _options: Required<EventBusOptions>;
+  private readonly _validator: Validator;
 
   constructor(options: EventBusOptions = {}) {
     this._options = {
       logLevel: 'error',
       ...options,
     };
+    this._validator = new Validator();
   }
 
   /**
@@ -150,7 +152,7 @@ export class EventBus {
     const sub = this._getOrCreateChannel(channel);
     const exists = !!sub.schema;
 
-    if (exists && !deepCompareStrict(sub.schema!, schema)) {
+    if (exists && !strictDeepEqual(sub.schema, schema)) {
       throw new SchemaMismatchError(channel, sub.schema!, schema);
     }
     sub.schema = schema;
@@ -239,7 +241,7 @@ export class EventBus {
   async publish<T>(channel: string, payload?: T): Promise<void> {
     const sub = this._getOrCreateChannel(channel);
 
-    if (typeof payload !== 'undefined' && sub.schema && !validate(payload, sub.schema).valid) {
+    if (typeof payload !== 'undefined' && sub.schema && !this._validator.validate(payload, sub.schema).valid) {
       throw new PayloadMismatchError(channel, sub.schema, payload);
     }
     sub.replay = payload;
