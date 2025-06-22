@@ -8,7 +8,7 @@ on:
 
 jobs:
   delivery:
-    name: Node 20.x
+    name: Node 24.x
     runs-on: ubuntu-latest
 
     steps:
