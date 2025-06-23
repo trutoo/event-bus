@@ -9,17 +9,28 @@ Simple typesafe cross-platform pubsub communication between different single pag
 
 ## Table of Contents
 
-- [Purpose](#purpose)
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Advanced Schema](#advanced-schema)
-- [API](#api)
-  - [Register](#register)
-  - [Unregister](#unregister)
-  - [Subscribe](#subscribe)
-  - [Publish](#publish)
-  - [Get Latest](#get-latest)
-  - [Get Schema](#get-schema)
+- [Event Bus](#event-bus)
+  - [Table of Contents](#table-of-contents)
+  - [Purpose](#purpose)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Advanced Schema](#advanced-schema)
+  - [API](#api)
+    - [Constructor Options](#constructor-options)
+    - [Register](#register)
+      - [Parameters](#parameters)
+    - [Unregister](#unregister)
+      - [Parameters](#parameters-1)
+    - [Subscribe](#subscribe)
+      - [Parameters](#parameters-2)
+    - [Publish](#publish)
+      - [Parameters](#parameters-3)
+    - [Get Latest](#get-latest)
+      - [Parameters](#parameters-4)
+    - [Get Schema](#get-schema)
+      - [Parameters](#parameters-5)
+    - [Clear Replay](#clear-replay)
+      - [Parameters](#parameters-6)
 
 ---
 
@@ -103,8 +114,8 @@ class PublisherElement extends HTMLElement {
     this.render();
     this.firstChild && this.firstChild.addEventListener('click', this.send);
   }
-  send() {
-    eventBus.publish('namespace:eventName', true);
+  async send() {
+    await eventBus.publish('namespace:eventName', true);
   }
   render() {
     this.innerHTML = `<button type="button">send</button>`;
@@ -118,22 +129,35 @@ class PublisherElement extends HTMLElement {
 `Fragment Two - React Component`
 
 ```typescript
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+
+// Custom hook for event bus subscriptions
+function useEventSubscription<T>(eventName: string, schema: object) {
+  const [value, setValue] = React.useState<T>();
+
+  React.useEffect(() => {
+    let sub: { unsubscribe(): void };
+
+    async function init() {
+      try {
+        eventBus.register(eventName, schema);
+        sub = await eventBus.subscribe<T>(eventName, (event) => setValue(event.payload));
+      } catch (e) {
+        console.error(`Failed to subscribe to ${eventName}:`, e);
+      }
+    }
+
+    init();
+    return () => {
+      if (sub) sub.unsubscribe();
+    };
+  }, [eventName, schema]);
+
+  return value;
+}
 
 function SubscriberComponent() {
-  const [isFavorite, setFavorite] = useState(false);
-
-  useEffect(() => {
-    function handleSubscribe(favorite: boolean) {
-      setFavorite(favorite);
-    }
-    eventBus.register('namespace:eventName', { type: 'boolean' });
-    const sub = eventBus.subscribe<boolean>('namespace:eventName', handleSubscribe);
-    return function cleanup() {
-      sub.unsubscribe();
-    };
-  }, []);
-
+  const isFavorite = useEventSubscription<boolean>('namespace:eventName', { type: 'boolean' });
   return isFavorite ? 'This is a favorite' : 'This is not interesting';
 }
 ```
@@ -205,8 +229,8 @@ export class StoreComponent implements OnInit, OnDestroy {
     /* handle new deals ... */
   }
 
-  onSend() {
-    eventBus.publish('store:addToCart', {
+  async onSend() {
+    await eventBus.publish('store:addToCart', {
       name: 'Milk',
       amount: '1000 ml',
       price: 0.99,
@@ -228,20 +252,37 @@ export class StoreComponent implements OnInit, OnDestroy {
 
 ## API
 
+### Constructor Options
+
+The EventBus constructor accepts an options object with the following properties:
+
+```typescript
+interface EventBusOptions {
+  /**
+   * The logging level for the event bus
+   * - 'none': No logging
+   * - 'error': Only log errors (default)
+   * - 'warn': Log warnings and errors
+   * - 'info': Log everything
+   */
+  logLevel?: 'none' | 'error' | 'warn' | 'info';
+}
+```
+
 ### Register
 
 Register a schema for the specified event type and equality checking on subsequent registers. Subsequent registers must use an equal schema or an error will be thrown.
 
 ```typescript
-register(channel: string, schema: object): boolean;
+register(channel: string, schema: Record<string, unknown>): boolean;
 ```
 
 #### Parameters
 
-| Name    | Type     | Description                                          |
-| ------- | -------- | ---------------------------------------------------- |
-| channel | `string` | name of event channel to register schema to          |
-| schema  | `object` | all communication on channel must follow this schema |
+| Name    | Type                      | Description                                          |
+| ------- | ------------------------- | ---------------------------------------------------- |
+| channel | `string`                  | name of event channel to register schema to          |
+| schema  | `Record<string, unknown>` | all communication on channel must follow this schema |
 
 **Returns** - returns true if event channel already existed of false if a new one was created.
 
@@ -272,10 +313,12 @@ with an optional replay of last event at initial subscription.
 The channel may be the wildcard `'*'` to subscribe to all channels.
 
 ```typescript
-subscribe<T>(channel: string, callback: Callback<T>): { unsubscribe(): void };
+async subscribe<T>(channel: string, callback: Callback<T>): Promise<{ unsubscribe(): void }>;
 
-subscribe<T>(channel: string, replay: boolean, callback: Callback<T>): { unsubscribe(): void };
+async subscribe<T>(channel: string, replay: boolean, callback: Callback<T>): Promise<{ unsubscribe(): void }>;
 ```
+
+Note: Subscribe is an async function that returns a Promise with the subscription.
 
 Callbacks will be fired when event is published on a subscribed channel with the argument:
 
@@ -300,10 +343,10 @@ Callbacks will be fired when event is published on a subscribed channel with the
 
 ### Publish
 
-Publish to event channel with an optional payload triggering all subscription callbacks.
+Publish to event channel with an optional payload triggering all subscription callbacks. Returns a Promise that resolves when all callbacks have completed.
 
 ```typescript
-publish<T>(channel: string, payload?: T): void;
+async publish<T>(channel: string, payload?: T): Promise<void>;
 ```
 
 #### Parameters
@@ -313,7 +356,7 @@ publish<T>(channel: string, payload?: T): void;
 | channel | `string` | name of event channel to send payload on |
 | payload | `any`    | payload to be sent                       |
 
-**Returns** - void
+**Returns** - Promise that resolves when all callbacks have completed
 
 ---
 
@@ -350,3 +393,21 @@ getSchema<T>(channel: string): any | undefined;
 | channel | `string` | name of the event channel to fetch the schema from |
 
 **Returns** - the schema or `undefined`
+
+---
+
+### Clear Replay
+
+Clears the replay event for the specified channel.
+
+```typescript
+clearReplay(channel: string): boolean;
+```
+
+#### Parameters
+
+| Name    | Type     | Description                                        |
+| ------- | -------- | -------------------------------------------------- |
+| channel | `string` | name of the event channel to clear the replay from |
+
+**Returns** - returns true if the replay event was cleared, false otherwise.
