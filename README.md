@@ -38,7 +38,7 @@ Simple typesafe cross-platform pubsub communication between different single pag
 
 This project was created to improve upon some of the deficits CustomEvents has in relation to event communication between separate web components or fragments, which often is the preferred way of communication. Below points are some of the benefits of using this pub-sub solution over the native solution.
 
-1. Each fragment can register on a custom named event channel with an optional [JSON schema draft-04](https://tools.ietf.org/html/draft-zyp-json-schema-04) to ensure all future traffic on that channel follows the specification. This means incompatibilities are reported before any payload is sent and every payload will be typesafe.
+1. Each fragment can register on a custom named event channel with an optional [JSON schema draft-07](https://json-schema.org/draft-07) to ensure all future traffic on that channel follows the specification. This means incompatibilities are reported before any payload is sent and every payload will be typesafe.
 
 2. The individual event channels stores the last payload allowing new fragments or asynchronous subscriptions to ask for a replay of the last payloads data as a first callback.
 
