@@ -275,7 +275,7 @@ describe('[EventBus]: subscribe and publish', () => {
     const callback = jest.fn();
     await eventBus.subscribe('*', callback);
     await eventBus.publish('test1', payload);
-    expect(callback).toHaveBeenCalledWith({ channel: '*', payload: payload });
+    expect(callback).toHaveBeenCalledWith({ channel: 'test1', payload });
   });
 
   it('should handle more advanced schemas', async () => {

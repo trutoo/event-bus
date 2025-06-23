@@ -23,9 +23,9 @@ class WebComponent extends HTMLElement {
       eventBus.publish('namespace:eventName', { nested: true });
     } catch (e) {
       console.warn(e);
-      console.debug('eventType:', e.eventType);
+      console.debug('channel:', e.channel);
       console.debug('schema:', e.schema);
-      console.debug('detail:', e.detail);
+      console.debug('payload:', e.payload);
     }
   }
 

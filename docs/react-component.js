@@ -12,7 +12,7 @@ function useEventSubscription(eventName, schema) {
         sub = await eventBus.subscribe(eventName, (event) => setValue(event.payload));
       } catch (e) {
         console.warn(`Failed to subscribe to ${eventName}:`, e);
-        console.debug('eventType:', e.eventType);
+        console.debug('channel:', e.channel);
         console.debug('schema:', e.schema);
         console.debug('newSchema:', e.newSchema);
       }
