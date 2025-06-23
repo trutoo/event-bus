@@ -41,8 +41,9 @@ export class PayloadMismatchError extends Error {
     public schema: Schema,
     public payload: Payload,
   ) {
-    super(`Payload does not match the specified schema for channel [${channel}]. 
-           Schema: ${JSON.stringify(schema)}, Payload: ${JSON.stringify(payload)}`);
+    super(
+      `Payload does not match the specified schema for channel [${channel}]. Schema: ${JSON.stringify(schema)}, Payload: ${JSON.stringify(payload)}`,
+    );
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, PayloadMismatchError);
     }
@@ -222,11 +223,11 @@ export class EventBus {
    * @param channel - The channel to publish to.
    * @param payload - The payload to send.
    */
-  private async _publishToChannel<T>(channel: string, payload?: T): Promise<void> {
+  private async _publishToChannel<T>(channel: string, origin: string, payload?: T): Promise<void> {
     const sub = this._subscriptions.get(channel);
     if (!sub) return;
 
-    const event: ChannelEvent<T> = { channel, payload };
+    const event: ChannelEvent<T> = { channel: origin, payload };
     await Promise.all(Object.values(sub.callbacks).map((callback) => this._asyncCallback(callback, event)));
   }
 
@@ -246,7 +247,10 @@ export class EventBus {
     }
     sub.replay = payload;
 
-    await Promise.all([this._publishToChannel(channel, payload), this._publishToChannel('*', payload)]);
+    await Promise.all([
+      this._publishToChannel(channel, channel, payload),
+      this._publishToChannel('*', channel, payload),
+    ]);
   }
 
   /**
