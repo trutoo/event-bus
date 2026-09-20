@@ -64,7 +64,7 @@
     "release": "semantic-release"
   },
   "dependencies": {
-    "fast-equals": "^5.2.2",
+    "fast-equals": "^6.0.0",
     "jsonschema": "^1.5.0"
   },
   "devDependencies": {
