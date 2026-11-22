@@ -2200,7 +2200,7 @@ __metadata:
     eslint-plugin-prettier: "npm:5.5.0"
     eslint-plugin-simple-import-sort: "npm:12.1.1"
     eslint-plugin-unused-imports: "npm:4.1.4"
-    fast-equals: "npm:^5.2.2"
+    fast-equals: "npm:^6.0.0"
     husky: "npm:9.1.7"
     jest: "npm:30.0.2"
     jsonschema: "npm:^1.5.0"
@@ -4672,10 +4672,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fast-equals@npm:^5.2.2":
-  version: 5.2.2
-  resolution: "fast-equals@npm:5.2.2"
-  checksum: 10c0/2bfeac6317a8959a00e2134749323557e5df6dea3af24e4457297733eace8ce4313fcbca2cf4532f3a6792607461e80442cd8d3af148d5c2e4e98ad996d6e5b5
+"fast-equals@npm:^6.0.0":
+  version: 6.4.1
+  resolution: "fast-equals@npm:6.4.1"
+  checksum: 10c0/c3189df309cc6277357c978b0c871edf318becb05e7afcd1d4826cc4e140ccd9b72c9ea2a85a8319250161d3818a4d7919d4784056a2065095baea74a218e0e1
   languageName: node
   linkType: hard
 
